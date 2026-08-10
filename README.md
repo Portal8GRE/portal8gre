@@ -1,15 +1,19 @@
-# Portal 8ª GRE — V0.2
+# Portal 8ª GRE — v0.3
 
-Versão visual atualizada para seguir o layout de referência enviado: cabeçalho institucional, menu horizontal verde, apresentação, cards dos setores e rodapé institucional.
+Versão integrada do Portal 8ª GRE com banco Supabase e nova visualização do módulo de Transporte.
 
-## Funcionalidades já disponíveis
-- Login e modo demonstração por perfil.
-- Cadastro central de escolas.
-- Agendamento de transporte (S10, Logan e Polo).
-- Registro de visitas técnicas.
-- Acompanhamento de aulas dadas, frequência, notas e intervenções.
-- Perfis de usuário e estrutura para Supabase.
-- Novas áreas visuais: Administração, Gestão e Prestação de Contas.
+## Novidades da v0.3
+- Calendário mensal de agendamentos de transporte.
+- S10, Logan e Polo identificados por cores.
+- Clique em uma data para visualizar todos os deslocamentos do dia.
+- Alternância entre visualização em Calendário e Lista.
+- Acesso aos detalhes: escola/destino, responsável, participantes, saída, retorno, finalidade e status.
+- Novo agendamento diretamente a partir de uma data vazia do calendário.
+- Validação de conflito de horário para o mesmo veículo.
+- Previsão de retorno passa a ser obrigatória para permitir a verificação de conflito.
 
-## Dados
-No modo demonstração, os dados ficam no armazenamento local do navegador. Para salvar os dados online e compartilhar entre usuários, configure o Supabase usando o botão **Configurar banco Supabase** e execute `supabase/schema.sql`.
+## Publicação
+Substitua os arquivos do repositório GitHub pelos arquivos desta versão. A Vercel fará um novo deployment automaticamente após o commit na branch principal.
+
+## Supabase
+Esta versão usa as mesmas tabelas da v0.2. Não é necessário alterar o banco para usar o novo calendário.

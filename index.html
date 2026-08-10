@@ -271,7 +271,36 @@
           <article><span class="vehicle-dot logan"></span><div><small>Veículo</small><strong>Logan</strong></div><span id="countLogan" class="counter">0</span></article>
           <article><span class="vehicle-dot polo"></span><div><small>Veículo</small><strong>Polo</strong></div><span id="countPolo" class="counter">0</span></article>
         </div>
-        <article class="panel">
+        <div class="transport-view-switch" role="tablist" aria-label="Visualização dos agendamentos">
+          <button id="transportCalendarTab" class="transport-view-btn active" type="button">▦ Calendário</button>
+          <button id="transportListTab" class="transport-view-btn" type="button">☷ Lista</button>
+        </div>
+
+        <article id="transportCalendarPanel" class="panel transport-calendar-panel">
+          <div class="calendar-head">
+            <div>
+              <p class="eyebrow">Agenda de Transporte</p>
+              <h3>Calendário de deslocamentos</h3>
+              <p class="calendar-subtitle">Clique em uma data para visualizar os agendamentos daquele dia.</p>
+            </div>
+            <div class="vehicle-legend" aria-label="Legenda dos veículos">
+              <span><i class="calendar-dot calendar-s10"></i>S10</span>
+              <span><i class="calendar-dot calendar-logan"></i>Logan</span>
+              <span><i class="calendar-dot calendar-polo"></i>Polo</span>
+            </div>
+          </div>
+          <div class="calendar-shell">
+            <div class="calendar-toolbar">
+              <button id="transportPrevMonth" class="calendar-nav" type="button" aria-label="Mês anterior">‹</button>
+              <strong id="transportMonthLabel" class="calendar-month-label"></strong>
+              <button id="transportNextMonth" class="calendar-nav" type="button" aria-label="Próximo mês">›</button>
+            </div>
+            <div class="calendar-week"><span>DOM</span><span>SEG</span><span>TER</span><span>QUA</span><span>QUI</span><span>SEX</span><span>SÁB</span></div>
+            <div id="transportCalendar" class="transport-calendar"></div>
+          </div>
+        </article>
+
+        <article id="transportListPanel" class="panel hidden">
           <div class="panel-header wrap"><div><p class="eyebrow">Agenda</p><h3>Agendamentos registrados</h3></div><div class="filter-row"><input id="transportSearch" placeholder="Buscar destino, escola ou responsável" /><select id="transportStatusFilter"><option value="">Todos os status</option><option>Solicitado</option><option>Confirmado</option><option>Realizado</option><option>Cancelado</option></select></div></div>
           <div class="table-wrap"><table><thead><tr><th>Data</th><th>Veículo</th><th>Destino</th><th>Responsável</th><th>Horário</th><th>Status</th><th></th></tr></thead><tbody id="transportTable"></tbody></table></div>
           <div id="transportEmpty" class="empty-block">Ainda não há agendamentos.</div>

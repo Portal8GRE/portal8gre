@@ -5,6 +5,8 @@
   const state = { user: null, schools: [], transport: [], visits: [], management: [] };
   const roleLabels = { admin:'Administrador', gerencia:'Gerência Regional', coordenacao:'Coordenação', tecnico:'Técnico da GRE', escola:'Escola' };
   const titles = { dashboard:'Apresentação', transporte:'Gerência Regional • Transporte', visitas:'Ensino e Aprendizagem • Visitas', gestao:'Gestão e Inspeção • Acompanhamento Escolar', administracao:'Administração', gestaoSetor:'Gestão', prestacao:'Prestação de Contas', escolas:'Escolas', usuarios:'Usuários e Permissões', configuracoes:'Configurações' };
+  let transportCalendarDate = new Date();
+  const transportMonthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
   function toast(message) {
     const el = $('#toast'); el.textContent = message; el.classList.add('show');
@@ -80,12 +82,51 @@
     $('#schoolTable').innerHTML = rows.map(s=>`<tr><td><strong>${esc(s.nome)}</strong></td><td>${esc(s.inep||'—')}</td><td>${esc(s.municipio||'—')}</td><td>${esc(s.gestor||'—')}</td><td>${esc(s.telefone||s.email||'—')}</td><td><span class="status realizado">${s.ativo===false?'Inativa':'Ativa'}</span></td></tr>`).join('');
   }
 
+  function transportVehicleClass(vehicle){ return vehicle==='S10'?'s10':vehicle==='Logan'?'logan':'polo'; }
+  function renderTransportCalendar(){
+    const grid=$('#transportCalendar'), label=$('#transportMonthLabel'); if(!grid||!label) return;
+    const y=transportCalendarDate.getFullYear(), m=transportCalendarDate.getMonth();
+    label.textContent=`${transportMonthNames[m]} de ${y}`;
+    const first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate(), prevDays=new Date(y,m,0).getDate();
+    const today=new Date(), todayKey=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const cells=[];
+    for(let i=first-1;i>=0;i--) cells.push(`<div class="calendar-day muted"><span class="calendar-day-num">${prevDays-i}</span></div>`);
+    for(let d=1;d<=days;d++){
+      const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const events=state.transport.filter(x=>String(x.data).slice(0,10)===key && x.status!=='Cancelado').sort((a,b)=>String(a.hora_saida||'').localeCompare(String(b.hora_saida||'')));
+      const shown=events.slice(0,3).map(x=>`<div class="calendar-event ${transportVehicleClass(x.veiculo)}" title="${esc(x.veiculo)} • ${esc(x.destino||x.escola_nome||'')}">${esc(x.veiculo)} • ${esc(x.destino||x.escola_nome||'Destino')}</div>`).join('');
+      const more=events.length>3?`<div class="calendar-more">+${events.length-3} agendamento(s)</div>`:'';
+      cells.push(`<button type="button" class="calendar-day ${key===todayKey?'today':''}" data-calendar-date="${key}"><span class="calendar-day-num">${d}</span><div class="calendar-events">${shown}${more}</div></button>`);
+    }
+    const total=first+days, remain=(7-(total%7))%7;
+    for(let d=1;d<=remain;d++) cells.push(`<div class="calendar-day muted"><span class="calendar-day-num">${d}</span></div>`);
+    grid.innerHTML=cells.join('');
+  }
+
+  function openTransportDay(key){
+    const list=state.transport.filter(x=>String(x.data).slice(0,10)===key).sort((a,b)=>String(a.hora_saida||'').localeCompare(String(b.hora_saida||'')));
+    const [y,m,d]=key.split('-').map(Number);
+    const title=`${String(d).padStart(2,'0')} de ${transportMonthNames[m-1]} de ${y}`;
+    if(!list.length){
+      openModal(title,'Agenda do dia',`<div class="calendar-empty-day">Nenhum transporte agendado para esta data.<br><button type="button" class="btn transport" data-new-transport-date="${key}">+ Agendar transporte</button></div>`);
+      return;
+    }
+    openModal(title,'Agenda do dia',`<div class="day-bookings">${list.map(x=>`<article class="day-booking"><div class="day-booking-head"><div><p class="eyebrow">${esc(x.status||'Solicitado')}</p><h3>${esc(x.finalidade||'Deslocamento')}</h3></div><span class="vehicle-chip ${transportVehicleClass(x.veiculo)}">${esc(x.veiculo||'—')}</span></div><div class="booking-detail-grid"><div class="booking-detail"><small>Escola / destino</small><strong>${esc(x.escola_nome||x.destino||'—')}</strong></div><div class="booking-detail"><small>Município / destino</small><strong>${esc(x.destino||'—')}</strong></div><div class="booking-detail"><small>Responsável</small><strong>${esc(x.responsavel||'—')}</strong></div><div class="booking-detail"><small>Quem irá</small><strong>${esc(x.participantes||'—')}</strong></div><div class="booking-detail"><small>Saída da 8ª GRE</small><strong>${esc(x.hora_saida||'—')}</strong></div><div class="booking-detail"><small>Previsão de retorno</small><strong>${esc(x.previsao_retorno||'—')}</strong></div></div><div class="booking-purpose"><strong>Finalidade:</strong> ${esc(x.finalidade||'—')}</div></article>`).join('')}</div>`);
+  }
+
+  function timeToMinutes(v){ if(!v) return null; const [h,m]=String(v).slice(0,5).split(':').map(Number); return h*60+m; }
+  function hasTransportConflict(item){
+    const start=timeToMinutes(item.hora_saida), end=timeToMinutes(item.previsao_retorno); if(start===null||end===null) return false;
+    return state.transport.some(x=>String(x.data).slice(0,10)===item.data && x.veiculo===item.veiculo && x.status!=='Cancelado' && (()=>{ const a=timeToMinutes(x.hora_saida), b=timeToMinutes(x.previsao_retorno); return a!==null&&b!==null&&start<b&&end>a; })());
+  }
+
   function renderTransport(){
     const q = ($('#transportSearch')?.value || '').toLowerCase(); const st = $('#transportStatusFilter')?.value || '';
     const rows = state.transport.filter(x=>(!st||x.status===st)&&(!q||[x.destino,x.escola_nome,x.responsavel,x.finalidade,x.veiculo].some(v=>String(v||'').toLowerCase().includes(q))));
     $('#transportEmpty').classList.toggle('hidden', rows.length>0);
     $('#transportTable').innerHTML = rows.map(x=>`<tr><td>${esc(fmtDate(x.data))}</td><td><strong>${esc(x.veiculo||'—')}</strong></td><td>${esc(x.destino||x.escola_nome||'—')}</td><td>${esc(x.responsavel||'—')}</td><td>${esc(x.hora_saida||'—')} ${x.previsao_retorno?`→ ${esc(x.previsao_retorno)}`:''}</td><td><span class="status ${String(x.status||'Solicitado').toLowerCase()}">${esc(x.status||'Solicitado')}</span></td><td><button class="action-btn" data-transport-status="${esc(x.id)}" title="Alterar status">⋯</button></td></tr>`).join('');
     ['S10','Logan','Polo'].forEach(v=>{ const id = v==='S10'?'countS10':v==='Logan'?'countLogan':'countPolo'; $('#'+id).textContent = state.transport.filter(x=>x.veiculo===v && x.status!=='Cancelado').length; });
+    renderTransportCalendar();
   }
 
   function renderVisits(){
@@ -114,7 +155,7 @@
   }
 
   function openTransportForm(){
-    openModal('Novo agendamento','Transporte',`<form id="transportForm" class="form-grid"><label>Data<input name="data" type="date" required></label><label>Veículo<select name="veiculo" required><option>S10</option><option>Logan</option><option>Polo</option></select></label><label class="full">Escola vinculada (opcional)<select name="escola_id">${schoolOptions()}</select></label><label>Município / destino<input name="destino" required></label><label>Responsável<input name="responsavel" value="${esc(state.user?.name||'')}" required></label><label>Horário de saída<input name="hora_saida" type="time" required></label><label>Previsão de retorno<input name="previsao_retorno" type="time"></label><label class="full">Participantes<input name="participantes" placeholder="Nomes separados por vírgula"></label><label class="full">Finalidade<textarea name="finalidade" required></textarea></label><input type="hidden" name="status" value="Solicitado"><div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button class="btn transport">Solicitar agendamento</button></div></form>`);
+    openModal('Novo agendamento','Transporte',`<form id="transportForm" class="form-grid"><label>Data<input name="data" type="date" required></label><label>Veículo<select name="veiculo" required><option>S10</option><option>Logan</option><option>Polo</option></select></label><label class="full">Escola vinculada (opcional)<select name="escola_id">${schoolOptions()}</select></label><label>Município / destino<input name="destino" required></label><label>Responsável<input name="responsavel" value="${esc(state.user?.name||'')}" required></label><label>Horário de saída<input name="hora_saida" type="time" required></label><label>Previsão de retorno<input name="previsao_retorno" type="time" required></label><label class="full">Participantes<input name="participantes" placeholder="Nomes separados por vírgula"></label><label class="full">Finalidade<textarea name="finalidade" required></textarea></label><input type="hidden" name="status" value="Solicitado"><div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button class="btn transport">Solicitar agendamento</button></div></form>`);
   }
 
   function openVisitForm(){
@@ -136,7 +177,10 @@
         e.preventDefault(); const d=formData(form); await store.insert('schools',{...d,ativo:true,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Escola cadastrada.'); return;
       }
       if(form.id==='transportForm'){
-        e.preventDefault(); const d=formData(form); const school=state.schools.find(s=>s.id===d.escola_id); await store.insert('transport',{...d,escola_id:d.escola_id||null,escola_nome:school?.nome||null,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Agendamento salvo.'); return;
+        e.preventDefault(); const d=formData(form);
+        if(timeToMinutes(d.previsao_retorno)<=timeToMinutes(d.hora_saida)){ toast('A previsão de retorno deve ser posterior ao horário de saída.'); return; }
+        if(hasTransportConflict(d)){ toast(`Conflito: ${d.veiculo} já possui agendamento nesse intervalo.`); return; }
+        const school=state.schools.find(s=>s.id===d.escola_id); await store.insert('transport',{...d,escola_id:d.escola_id||null,escola_nome:school?.nome||null,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Agendamento salvo.'); return;
       }
       if(form.id==='visitForm'){
         e.preventDefault(); const d=formData(form); const school=state.schools.find(s=>s.id===d.escola_id); await store.insert('visits',{...d,escola_nome:school?.nome||null,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Visita salva no histórico.'); return;
@@ -154,6 +198,10 @@
     if(e.target.id==='closeModal'||e.target.matches('[data-close]')) closeModal();
     if(e.target.id==='newSchoolBtn') openSchoolForm();
     if(e.target.id==='newTransportBtn') openTransportForm();
+    if(e.target.id==='transportCalendarTab'){ $('#transportCalendarTab').classList.add('active'); $('#transportListTab').classList.remove('active'); $('#transportCalendarPanel').classList.remove('hidden'); $('#transportListPanel').classList.add('hidden'); }
+    if(e.target.id==='transportListTab'){ $('#transportListTab').classList.add('active'); $('#transportCalendarTab').classList.remove('active'); $('#transportListPanel').classList.remove('hidden'); $('#transportCalendarPanel').classList.add('hidden'); }
+    if(e.target.id==='transportPrevMonth'){ transportCalendarDate=new Date(transportCalendarDate.getFullYear(),transportCalendarDate.getMonth()-1,1); renderTransportCalendar(); }
+    if(e.target.id==='transportNextMonth'){ transportCalendarDate=new Date(transportCalendarDate.getFullYear(),transportCalendarDate.getMonth()+1,1); renderTransportCalendar(); }
     if(e.target.id==='newVisitBtn') openVisitForm();
     if(e.target.id==='newManagementBtn') openManagementForm();
     if(['openDbConfig','openDbConfig2'].includes(e.target.id)) openDbConfig();
@@ -164,6 +212,8 @@
       openModal('Novo registro','Ação rápida',`<div class="roles-grid"><button class="btn transport" data-quick="transport">Transporte</button><button class="btn visits" data-quick="visit">Visita</button><button class="btn management" data-quick="management">Acompanhamento</button><button class="btn schools" data-quick="school">Escola</button></div>`);
     }
     const quick=e.target.closest('[data-quick]'); if(quick){ const t=quick.dataset.quick; closeModal(); ({transport:openTransportForm,visit:openVisitForm,management:openManagementForm,school:openSchoolForm}[t])(); }
+    const calendarDay=e.target.closest('[data-calendar-date]'); if(calendarDay){ openTransportDay(calendarDay.dataset.calendarDate); }
+    const newDate=e.target.closest('[data-new-transport-date]'); if(newDate){ const date=newDate.dataset.newTransportDate; closeModal(); openTransportForm(); const input=document.querySelector('#transportForm input[name="data"]'); if(input) input.value=date; }
     const statusBtn=e.target.closest('[data-transport-status]'); if(statusBtn){ const id=statusBtn.dataset.transportStatus; const item=state.transport.find(x=>x.id===id); openModal('Alterar status','Transporte',`<form id="statusForm" class="form-stack"><input type="hidden" name="id" value="${esc(id)}"><label>Status<select name="status"><option ${item.status==='Solicitado'?'selected':''}>Solicitado</option><option ${item.status==='Confirmado'?'selected':''}>Confirmado</option><option ${item.status==='Realizado'?'selected':''}>Realizado</option><option ${item.status==='Cancelado'?'selected':''}>Cancelado</option></select></label><div class="modal-actions"><button type="button" data-close class="btn secondary">Cancelar</button><button class="btn transport">Salvar</button></div></form>`); }
   });
 
