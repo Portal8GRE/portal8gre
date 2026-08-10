@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#006633" />
+  <title>Portal 8ª GRE — Sistema Integrado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <section id="loginView" class="login-view">
+    <div class="login-shell">
+      <div class="login-brand-panel">
+        <div class="portal-logo portal-logo-large" aria-hidden="true">
+          <svg viewBox="0 0 96 82" role="img">
+            <path d="M8 19c14-8 28-7 40 3v49C36 61 22 59 8 66V19Z" fill="#fff" opacity=".96"/>
+            <path d="M88 19c-14-8-28-7-40 3v49c12-10 26-12 40-5V19Z" fill="#fff" opacity=".86"/>
+            <path d="M48 22v49" stroke="#0b6c45" stroke-width="3"/>
+            <circle cx="48" cy="15" r="6" fill="#f2b20e"/>
+            <circle cx="33" cy="13" r="5" fill="#1d5aa6"/>
+            <circle cx="63" cy="13" r="5" fill="#008757"/>
+          </svg>
+        </div>
+        <div>
+          <p class="login-kicker">8ª Gerência Regional de Educação</p>
+          <h1>Portal <span>8ª GRE</span></h1>
+          <p>Sistema integrado para transporte, visitas técnicas, acompanhamento das escolas, gestão e relatórios.</p>
+        </div>
+        <div class="login-features">
+          <span>Dados centralizados</span>
+          <span>Histórico por escola</span>
+          <span>Acesso por perfil</span>
+          <span>Banco de dados na nuvem</span>
+        </div>
+      </div>
+
+      <div class="login-card-wrap">
+        <div class="login-card">
+          <div class="login-title-row">
+            <div class="mini-seal">8ª</div>
+            <div><strong>Portal 8ª GRE</strong><small>Sistema Integrado</small></div>
+          </div>
+          <p class="eyebrow">Acesso ao sistema</p>
+          <h2>Bem-vindo</h2>
+          <p class="muted">Entre com seu usuário. Enquanto configuramos o banco online, você pode testar o sistema em modo demonstração.</p>
+
+          <form id="loginForm" class="form-stack">
+            <label>E-mail
+              <input id="loginEmail" type="email" placeholder="nome@seduc.pi.gov.br" autocomplete="email" />
+            </label>
+            <label>Senha
+              <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" />
+            </label>
+            <button class="btn primary full" type="submit">Entrar</button>
+          </form>
+
+          <div class="divider"><span>ou</span></div>
+          <div class="demo-box">
+            <label>Perfil para demonstração
+              <select id="demoRole">
+                <option value="gerencia">Gerência Regional</option>
+                <option value="coordenacao">Coordenação</option>
+                <option value="tecnico">Técnico da GRE</option>
+                <option value="escola">Escola</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </label>
+            <button id="demoLogin" class="btn secondary full" type="button">Entrar em modo demonstração</button>
+          </div>
+          <button id="openDbConfig" class="text-button" type="button">Configurar banco Supabase</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="appView" class="app-shell hidden">
+    <header class="institutional-header">
+      <div class="brand-area">
+        <div class="portal-logo" aria-hidden="true">
+          <svg viewBox="0 0 96 82">
+            <path d="M8 19c14-8 28-7 40 3v49C36 61 22 59 8 66V19Z" fill="#eef8f3" stroke="#075a3a" stroke-width="2"/>
+            <path d="M88 19c-14-8-28-7-40 3v49c12-10 26-12 40-5V19Z" fill="#fff" stroke="#075a3a" stroke-width="2"/>
+            <path d="M48 22v49" stroke="#075a3a" stroke-width="3"/>
+            <circle cx="48" cy="14" r="6" fill="#f1b31c"/>
+            <circle cx="33" cy="13" r="5" fill="#1e5aa8"/>
+            <circle cx="63" cy="13" r="5" fill="#00875a"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Portal <span>8ª GRE</span></h1>
+          <p>8ª Gerência Regional de Educação • SEDUC/PI</p>
+        </div>
+      </div>
+
+      <div class="institutional-right">
+        <div class="institutional-lockup">
+          <strong>EDUCAÇÃO</strong>
+          <small>Secretaria de Estado<br>da Educação — SEDUC</small>
+        </div>
+        <div class="head-divider"></div>
+        <div class="gre-lockup">
+          <span>8ª GRE</span>
+          <small>Oeiras — Piauí</small>
+        </div>
+        <div class="user-head">
+          <div id="userAvatar" class="avatar">U</div>
+          <div><strong id="userMiniName">Usuário</strong><small id="userMiniRole">Perfil</small></div>
+          <button id="logoutBtn" class="logout-btn" title="Sair">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <aside class="sidebar portal-menu-wrap">
+      <button id="menuToggle" class="menu-toggle" aria-label="Abrir menu">☰</button>
+      <nav id="mainNav" class="nav-list portal-nav">
+        <button class="nav-item home-nav active" data-view="dashboard" title="Início"><span>⌂</span><b>Início</b></button>
+        <button class="nav-item" data-view="dashboard">Apresentação</button>
+        <button class="nav-item" data-view="transporte">Gerência Regional</button>
+        <button class="nav-item" data-view="visitas">Ensino e Aprendizagem</button>
+        <button class="nav-item" data-view="gestao">Gestão e Inspeção</button>
+        <button class="nav-item" data-view="administracao">Administração</button>
+        <button class="nav-item" data-view="gestaoSetor">Gestão</button>
+        <button class="nav-item" data-view="prestacao">Prestação de Contas</button>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar utility-bar">
+        <div>
+          <p class="eyebrow">Sistema Integrado da 8ª GRE</p>
+          <h2 id="pageTitle">Painel Geral</h2>
+        </div>
+        <div class="top-actions">
+          <span id="storageBadge" class="badge demo">Modo demonstração</span>
+          <button class="utility-link" data-view="escolas">🏫 Escolas</button>
+          <button class="utility-link admin-only" data-view="usuarios">👥 Usuários</button>
+          <button class="utility-link admin-only" data-view="configuracoes">⚙ Configurações</button>
+          <button id="quickAdd" class="btn primary small">+ Novo registro</button>
+        </div>
+      </header>
+
+      <section id="dashboard" class="view active-view portal-home">
+        <div class="hero-grid">
+          <div class="hero-illustration" aria-hidden="true">
+            <svg viewBox="0 0 430 300">
+              <path d="M0 224c80-37 137-38 214-11 70 25 138 26 216-21v108H0Z" fill="#dceecb"/>
+              <path d="M0 250c76-21 135-14 202 9 86 29 143 14 228-32v73H0Z" fill="#c8e3b4" opacity=".85"/>
+              <path d="M55 195h210v74H55z" fill="#91bb83"/>
+              <path d="M83 170h153v25H83z" fill="#a9ca96"/>
+              <path d="M112 144h98l35 26H78z" fill="#7ca66f"/>
+              <rect x="86" y="202" width="26" height="47" rx="3" fill="#dce8cc"/>
+              <rect x="132" y="202" width="26" height="47" rx="3" fill="#dce8cc"/>
+              <rect x="178" y="202" width="26" height="47" rx="3" fill="#dce8cc"/>
+              <rect x="218" y="202" width="27" height="67" rx="3" fill="#dce8cc"/>
+              <circle cx="314" cy="183" r="33" fill="#a8cf91"/>
+              <rect x="309" y="207" width="9" height="57" rx="4" fill="#6d9461"/>
+              <circle cx="347" cy="202" r="25" fill="#c0dba9"/>
+              <rect x="343" y="219" width="7" height="43" rx="3" fill="#739668"/>
+              <path d="M16 84c50 30 79 20 118-20" fill="none" stroke="#95cbe3" stroke-width="2"/>
+              <path d="M2 120c67 40 109 29 159-21" fill="none" stroke="#95cbe3" stroke-width="2" opacity=".8"/>
+            </svg>
+          </div>
+
+          <div class="welcome-copy">
+            <p class="welcome-pre">Bem-vindo ao</p>
+            <h1>Portal <span>8ª GRE</span></h1>
+            <div class="title-line"></div>
+            <p>O Portal 8ª GRE reúne os sistemas, informações e serviços da Gerência Regional para apoiar o trabalho dos setores e das escolas jurisdicionadas.</p>
+            <strong>Dados integrados para acompanhar, planejar e intervir com mais agilidade.</strong>
+          </div>
+
+          <div class="intro-cards">
+            <article class="info-card map-card">
+              <div class="info-title"><span>📍</span><strong>Localização da 8ª GRE</strong></div>
+              <div class="mini-map"><div class="map-road r1"></div><div class="map-road r2"></div><div class="map-road r3"></div><span>●</span></div>
+              <div class="info-bottom">📍 <strong>Oeiras — PI</strong></div>
+            </article>
+            <article class="info-card user-card">
+              <div class="info-title"><span>👤</span><strong>Usuário conectado</strong></div>
+              <div class="profile-placeholder"><span id="dashboardAvatar">U</span></div>
+              <strong id="dashboardUserName">Usuário</strong>
+              <small id="dashboardUserRole">Perfil de acesso</small>
+            </article>
+            <article class="info-card about-card">
+              <div class="info-title"><span>▣</span><strong>Sistema Integrado</strong></div>
+              <p>Transporte, visitas técnicas, gestão escolar, escolas, usuários e relatórios conectados em um único ambiente.</p>
+              <button id="quickAddHero" class="mini-action" type="button">+ Novo registro</button>
+            </article>
+            <article class="info-card status-card">
+              <div class="info-title"><span>◉</span><strong>Informações do Sistema</strong></div>
+              <div class="status-line"><span>●</span><div><small>Armazenamento</small><strong id="dashboardStorage">Demonstração local</strong></div></div>
+              <div class="status-line"><span>◷</span><div><small>Data</small><strong id="todayLabel"></strong></div></div>
+              <div class="status-line"><span>🔒</span><div><small>Acesso</small><strong>Por perfil e permissão</strong></div></div>
+              <div class="status-line"><span>☁</span><div><small>Banco online</small><strong>Preparado para Supabase</strong></div></div>
+            </article>
+          </div>
+        </div>
+
+        <div class="section-title"><span></span><h2>▦ &nbsp; Acesso aos Principais Setores</h2><span></span></div>
+
+        <div class="sector-grid">
+          <article class="sector-card sector-blue">
+            <div class="sector-head"><div class="sector-icon">👥</div><h3>Gerência<br>Regional</h3></div>
+            <ul><li>Gerência</li><li>Agendamento de Transporte</li><li>Equipe Multiprofissional</li></ul>
+            <button data-go="transporte" class="sector-btn">Acessar <span>→</span></button>
+          </article>
+
+          <article class="sector-card sector-green sector-wide">
+            <div class="sector-head"><div class="sector-icon">📖</div><h3>Ensino e Aprendizagem</h3></div>
+            <div class="sector-columns"><ul><li>GdA</li><li>Gestão da Aprendizagem</li><li>EPT</li><li>AE</li><li>Educação Física</li></ul><ul><li>Programas e Projetos</li><li>Seduc Olímpica</li><li>Canal Educação</li><li>PEPAI</li></ul></div>
+            <button data-go="visitas" class="sector-btn">Acessar <span>→</span></button>
+          </article>
+
+          <article class="sector-card sector-teal">
+            <div class="sector-head"><div class="sector-icon">🛡</div><h3>Gestão e Inspeção</h3></div>
+            <ul><li>Aulas dadas</li><li>Frequência</li><li>Notas e intervenções</li></ul>
+            <button data-go="gestao" class="sector-btn">Acessar <span>→</span></button>
+          </article>
+
+          <article class="sector-card sector-orange">
+            <div class="sector-head"><div class="sector-icon">▤</div><h3>Administração</h3></div>
+            <ul><li>Ponto Eletrônico</li><li>Lotação</li><li>Patrimônio</li></ul>
+            <button data-go="administracao" class="sector-btn">Acessar <span>→</span></button>
+          </article>
+
+          <article class="sector-card sector-purple">
+            <div class="sector-head"><div class="sector-icon">▥</div><h3>Gestão</h3></div>
+            <ul><li>ASURV</li><li>Nutricionista</li><li>Banco de Dados</li></ul>
+            <button data-go="gestaoSetor" class="sector-btn">Acessar <span>→</span></button>
+          </article>
+
+          <article class="sector-card sector-finance">
+            <div class="finance-icon">▣</div>
+            <h3>Prestação<br>de Contas</h3>
+            <button data-go="prestacao" class="sector-btn">Acessar <span>→</span></button>
+          </article>
+        </div>
+
+        <div class="stats-grid compact-stats">
+          <article class="stat-card blue"><span class="stat-icon">🚙</span><div><small>Agendamentos</small><strong id="statTransport">0</strong><span>Transporte registrado</span></div></article>
+          <article class="stat-card green"><span class="stat-icon">📍</span><div><small>Visitas</small><strong id="statVisits">0</strong><span>Visitas técnicas</span></div></article>
+          <article class="stat-card purple"><span class="stat-icon">🏫</span><div><small>Escolas</small><strong id="statSchools">0</strong><span>Cadastros ativos</span></div></article>
+          <article class="stat-card orange"><span class="stat-icon">⚠️</span><div><small>Intervenções</small><strong id="statInterventions">0</strong><span>Acompanhamentos abertos</span></div></article>
+        </div>
+
+        <div class="content-grid two dashboard-lists">
+          <article class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Agenda</p><h3>Próximos deslocamentos</h3></div><button class="link-button" data-go="transporte">Ver todos</button></div>
+            <div id="dashboardTransportList" class="activity-list empty-state">Nenhum agendamento cadastrado.</div>
+          </article>
+          <article class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Acompanhamento</p><h3>Visitas recentes</h3></div><button class="link-button" data-go="visitas">Ver todas</button></div>
+            <div id="dashboardVisitList" class="activity-list empty-state">Nenhuma visita cadastrada.</div>
+          </article>
+        </div>
+      </section>
+
+      <section id="transporte" class="view">
+        <div class="module-banner blue-banner">
+          <div><p class="eyebrow">Gerência Regional</p><h1>Agendamento de Transporte</h1><p>Solicite, acompanhe e visualize os deslocamentos dos veículos da 8ª GRE.</p></div>
+          <button id="newTransportBtn" class="btn transport">+ Novo agendamento</button>
+        </div>
+        <div class="vehicle-strip">
+          <article><span class="vehicle-dot s10"></span><div><small>Veículo</small><strong>S10</strong></div><span id="countS10" class="counter">0</span></article>
+          <article><span class="vehicle-dot logan"></span><div><small>Veículo</small><strong>Logan</strong></div><span id="countLogan" class="counter">0</span></article>
+          <article><span class="vehicle-dot polo"></span><div><small>Veículo</small><strong>Polo</strong></div><span id="countPolo" class="counter">0</span></article>
+        </div>
+        <article class="panel">
+          <div class="panel-header wrap"><div><p class="eyebrow">Agenda</p><h3>Agendamentos registrados</h3></div><div class="filter-row"><input id="transportSearch" placeholder="Buscar destino, escola ou responsável" /><select id="transportStatusFilter"><option value="">Todos os status</option><option>Solicitado</option><option>Confirmado</option><option>Realizado</option><option>Cancelado</option></select></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Data</th><th>Veículo</th><th>Destino</th><th>Responsável</th><th>Horário</th><th>Status</th><th></th></tr></thead><tbody id="transportTable"></tbody></table></div>
+          <div id="transportEmpty" class="empty-block">Ainda não há agendamentos.</div>
+        </article>
+      </section>
+
+      <section id="visitas" class="view">
+        <div class="module-banner green-banner">
+          <div><p class="eyebrow">Ensino e Aprendizagem</p><h1>Visitas Técnicas</h1><p>Cada técnico registra suas visitas; coordenação e gerência acompanham todo o histórico.</p></div>
+          <button id="newVisitBtn" class="btn visits">+ Nova visita</button>
+        </div>
+        <article class="panel">
+          <div class="panel-header wrap"><div><p class="eyebrow">Histórico</p><h3>Visitas registradas</h3></div><input id="visitSearch" placeholder="Buscar escola, técnico ou município" /></div>
+          <div id="visitsList" class="card-list"></div>
+          <div id="visitsEmpty" class="empty-block">Nenhuma visita registrada.</div>
+        </article>
+      </section>
+
+      <section id="gestao" class="view">
+        <div class="module-banner teal-banner">
+          <div><p class="eyebrow">Gestão e Inspeção</p><h1>Acompanhamento Escolar</h1><p>Aulas dadas, frequência, notas, situações críticas e intervenções da equipe.</p></div>
+          <button id="newManagementBtn" class="btn management">+ Novo acompanhamento</button>
+        </div>
+        <div id="managementCards" class="management-grid"></div>
+        <div id="managementEmpty" class="empty-block panel">Nenhum acompanhamento registrado.</div>
+      </section>
+
+      <section id="administracao" class="view">
+        <div class="module-banner orange-banner"><div><p class="eyebrow">Administração</p><h1>Administração</h1><p>Ambiente preparado para Ponto Eletrônico, Lotação, Patrimônio e outros serviços administrativos.</p></div></div>
+        <div class="placeholder-grid">
+          <article class="placeholder-card"><span>🕘</span><h3>Ponto Eletrônico</h3><p>Módulo reservado para acesso e acompanhamento.</p></article>
+          <article class="placeholder-card"><span>👥</span><h3>Lotação</h3><p>Estrutura para consultas e fluxos de lotação.</p></article>
+          <article class="placeholder-card"><span>🏷</span><h3>Patrimônio</h3><p>Estrutura para controle e acompanhamento patrimonial.</p></article>
+        </div>
+      </section>
+
+      <section id="gestaoSetor" class="view">
+        <div class="module-banner purple-banner"><div><p class="eyebrow">Gestão</p><h1>Setor de Gestão</h1><p>Área para ASURV, Nutricionista e Banco de Dados.</p></div></div>
+        <div class="placeholder-grid">
+          <article class="placeholder-card"><span>📈</span><h3>ASURV</h3><p>Espaço do setor para acompanhamento de demandas.</p></article>
+          <article class="placeholder-card"><span>🍎</span><h3>Nutricionista</h3><p>Área para registros e acompanhamento das escolas.</p></article>
+          <article class="placeholder-card"><span>🗄</span><h3>Banco de Dados</h3><p>Consultas e organização das bases da Regional.</p></article>
+        </div>
+      </section>
+
+      <section id="prestacao" class="view">
+        <div class="module-banner finance-banner"><div><p class="eyebrow">Prestação de Contas</p><h1>Prestação de Contas</h1><p>Área reservada para documentos, acompanhamento de pendências e histórico das unidades escolares.</p></div></div>
+        <div class="empty-block panel">Módulo estruturado para desenvolvimento na próxima etapa.</div>
+      </section>
+
+      <section id="escolas" class="view">
+        <div class="module-banner school-banner">
+          <div><p class="eyebrow">Cadastro Central</p><h1>Escolas Jurisdicionadas</h1><p>Um único cadastro de escola utilizado por todos os módulos do sistema.</p></div>
+          <button id="newSchoolBtn" class="btn schools">+ Nova escola</button>
+        </div>
+        <article class="panel">
+          <div class="panel-header wrap"><div><p class="eyebrow">Rede</p><h3>Escolas cadastradas</h3></div><input id="schoolSearch" placeholder="Buscar escola ou município" /></div>
+          <div class="table-wrap"><table><thead><tr><th>Escola</th><th>INEP</th><th>Município</th><th>Gestor(a)</th><th>Contato</th><th>Situação</th></tr></thead><tbody id="schoolTable"></tbody></table></div>
+          <div id="schoolsEmpty" class="empty-block">Nenhuma escola cadastrada.</div>
+        </article>
+      </section>
+
+      <section id="usuarios" class="view">
+        <div class="module-banner users-banner"><div><p class="eyebrow">Administração do Sistema</p><h1>Usuários e Permissões</h1><p>Controle de acesso por perfil, setor e responsabilidade.</p></div></div>
+        <div class="info-banner">Nesta versão, o cadastro de usuários online deve ser feito pelo ambiente administrativo do Supabase. O painel completo de criação de contas será adicionado em uma próxima etapa.</div>
+        <article class="panel"><div class="panel-header"><div><p class="eyebrow">Perfis previstos</p><h3>Níveis de acesso</h3></div></div><div class="roles-grid"><div><strong>Administrador</strong><span>Acesso total e configurações</span></div><div><strong>Gerência</strong><span>Visão geral de todos os módulos</span></div><div><strong>Coordenação</strong><span>Acompanha o setor sob sua responsabilidade</span></div><div><strong>Técnico</strong><span>Registra e acompanha suas atividades</span></div><div><strong>Escola</strong><span>Acesso aos serviços destinados à unidade escolar</span></div></div></article>
+      </section>
+
+      <section id="configuracoes" class="view">
+        <div class="module-banner config-banner"><div><p class="eyebrow">Sistema</p><h1>Configurações</h1><p>Banco de dados e informações técnicas da aplicação.</p></div></div>
+        <article class="panel config-panel"><div><h3>Banco de dados</h3><p id="dbStatusText">O sistema está usando armazenamento local para demonstração.</p></div><button id="openDbConfig2" class="btn secondary">Configurar Supabase</button></article>
+      </section>
+    </main>
+
+    <footer class="portal-footer">
+      <span>8ª Gerência Regional de Educação • SEDUC/PI</span>
+      <span>Sistema integrado para apoiar a gestão regional.</span>
+      <span>© 2026 Portal 8ª GRE</span>
+    </footer>
+  </div>
+
+  <dialog id="modal" class="modal">
+    <div class="modal-card">
+      <div class="modal-head"><div><p id="modalEyebrow" class="eyebrow">Novo registro</p><h2 id="modalTitle">Cadastro</h2></div><button id="closeModal" class="icon-button">×</button></div>
+      <div id="modalBody"></div>
+    </div>
+  </dialog>
+
+  <script src="js/store.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

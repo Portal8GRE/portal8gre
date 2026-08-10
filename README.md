@@ -1,16 +1,15 @@
-## Hi there 👋
+# Portal 8ª GRE — V0.2
 
-<!--
-**Portal8GRE/portal8gre** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+Versão visual atualizada para seguir o layout de referência enviado: cabeçalho institucional, menu horizontal verde, apresentação, cards dos setores e rodapé institucional.
 
-Here are some ideas to get you started:
+## Funcionalidades já disponíveis
+- Login e modo demonstração por perfil.
+- Cadastro central de escolas.
+- Agendamento de transporte (S10, Logan e Polo).
+- Registro de visitas técnicas.
+- Acompanhamento de aulas dadas, frequência, notas e intervenções.
+- Perfis de usuário e estrutura para Supabase.
+- Novas áreas visuais: Administração, Gestão e Prestação de Contas.
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## Dados
+No modo demonstração, os dados ficam no armazenamento local do navegador. Para salvar os dados online e compartilhar entre usuários, configure o Supabase usando o botão **Configurar banco Supabase** e execute `supabase/schema.sql`.
