@@ -48,7 +48,7 @@
           </div>
           <p class="eyebrow">Acesso ao sistema</p>
           <h2>Bem-vindo</h2>
-          <p class="muted">Entre com seu usuário. Enquanto configuramos o banco online, você pode testar o sistema em modo demonstração.</p>
+          <p class="muted">Entre com seu usuário e senha. A conexão com o banco de dados é realizada automaticamente pelo sistema.</p>
 
           <form id="loginForm" class="form-stack">
             <label>E-mail
@@ -73,7 +73,7 @@
             </label>
             <button id="demoLogin" class="btn secondary full" type="button">Entrar em modo demonstração</button>
           </div>
-          <button id="openDbConfig" class="text-button" type="button">Configurar banco Supabase</button>
+          <div id="loginDbStatus" class="login-db-status"><span class="connection-dot"></span> Verificando conexão com o banco...</div><button id="openDbConfig" class="text-button" type="button">Configuração técnica do banco</button>
         </div>
       </div>
     </div>
@@ -371,7 +371,7 @@
 
       <section id="configuracoes" class="view">
         <div class="module-banner config-banner"><div><p class="eyebrow">Sistema</p><h1>Configurações</h1><p>Banco de dados e informações técnicas da aplicação.</p></div></div>
-        <article class="panel config-panel"><div><h3>Banco de dados</h3><p id="dbStatusText">O sistema está usando armazenamento local para demonstração.</p></div><button id="openDbConfig2" class="btn secondary">Configurar Supabase</button></article>
+        <article class="panel config-panel"><div><h3>Banco de dados</h3><p id="dbStatusText">Verificando conexão com o banco de dados...</p><small>Na produção, a conexão é gerenciada automaticamente pela Vercel.</small></div><button id="openDbConfig2" class="btn secondary">Configurar Supabase</button></article>
       </section>
     </main>
 

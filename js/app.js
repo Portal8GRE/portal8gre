@@ -44,8 +44,31 @@
 
   async function boot(){
     $('#todayLabel').textContent = new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+    const config = await store.init();
+    updateConnectionUi(config);
     const user = await store.currentSession();
     if (user) showApp(user); else showLogin();
+  }
+
+  function updateConnectionUi(config){
+    const source = config?.source || store.getConfigSource?.() || 'none';
+    const loginStatus = $('#loginDbStatus');
+    const loginConfigBtn = $('#openDbConfig');
+    const settingsConfigBtn = $('#openDbConfig2');
+
+    if(source === 'vercel'){
+      if(loginStatus) loginStatus.innerHTML = '<span class="connection-dot online"></span> Banco de dados conectado automaticamente';
+      if(loginConfigBtn) loginConfigBtn.classList.add('hidden');
+      if(settingsConfigBtn){ settingsConfigBtn.textContent = 'Gerenciado pela Vercel'; settingsConfigBtn.disabled = true; }
+    } else if(source === 'local'){
+      if(loginStatus) loginStatus.innerHTML = '<span class="connection-dot online"></span> Banco configurado neste navegador';
+      if(loginConfigBtn) loginConfigBtn.classList.remove('hidden');
+      if(settingsConfigBtn){ settingsConfigBtn.textContent = 'Configurar Supabase'; settingsConfigBtn.disabled = false; }
+    } else {
+      if(loginStatus) loginStatus.innerHTML = '<span class="connection-dot"></span> Banco online ainda não configurado na Vercel';
+      if(loginConfigBtn) loginConfigBtn.classList.remove('hidden');
+      if(settingsConfigBtn){ settingsConfigBtn.textContent = 'Configurar Supabase'; settingsConfigBtn.disabled = false; }
+    }
   }
   function showLogin(){ $('#loginView').classList.remove('hidden'); $('#appView').classList.add('hidden'); }
   async function showApp(user){ $('#loginView').classList.add('hidden'); $('#appView').classList.remove('hidden'); setUser(user); await loadData(); navigate('dashboard'); }
@@ -146,8 +169,13 @@
   function closeModal(){ $('#modal').close(); }
 
   function openDbConfig(){
+    const source = store.getConfigSource?.() || 'none';
+    if(source === 'vercel'){
+      openModal('Banco conectado','Configuração automática',`<div class="info-banner"><strong>Supabase conectado automaticamente.</strong><br>As credenciais públicas estão configuradas nas Environment Variables do projeto na Vercel. Os usuários precisam informar somente e-mail e senha para entrar.</div><div class="modal-actions"><button type="button" data-close class="btn primary">Fechar</button></div>`);
+      return;
+    }
     const cfg = store.getConfig() || {};
-    openModal('Conectar banco Supabase','Configuração técnica',`<form id="dbConfigForm" class="form-grid"><label class="full">Project URL<input name="url" value="${esc(cfg.url||'')}" placeholder="https://xxxx.supabase.co" required></label><label class="full">Publishable / anon key<textarea name="key" placeholder="sb_publishable_..." required>${esc(cfg.key||'')}</textarea></label><p class="hint full">Use apenas a chave pública (publishable/anon). Nunca cole a service_role no navegador. Antes de conectar, execute o arquivo <strong>supabase/schema.sql</strong> no SQL Editor do seu projeto.</p><div class="modal-actions full"><button type="button" id="clearDbConfig" class="btn secondary">Remover configuração</button><button class="btn primary">Salvar e testar</button></div></form>`);
+    openModal('Conectar banco Supabase','Configuração técnica',`<form id="dbConfigForm" class="form-grid"><label class="full">Project URL<input name="url" value="${esc(cfg.url||'')}" placeholder="https://xxxx.supabase.co" required></label><label class="full">Publishable / anon key<textarea name="key" placeholder="sb_publishable_..." required>${esc(cfg.key||'')}</textarea></label><p class="hint full">Esta opção é apenas um fallback técnico. Na versão publicada, prefira configurar <strong>SUPABASE_URL</strong> e <strong>SUPABASE_PUBLISHABLE_KEY</strong> na Vercel. Nunca use a service_role no navegador.</p><div class="modal-actions full"><button type="button" id="clearDbConfig" class="btn secondary">Remover configuração local</button><button class="btn primary">Salvar e testar</button></div></form>`);
   }
 
   function openSchoolForm(){

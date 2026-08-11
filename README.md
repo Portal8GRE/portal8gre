@@ -1,19 +1,33 @@
-# Portal 8ª GRE — v0.3
+# Portal 8ª GRE — v0.4
 
-Versão integrada do Portal 8ª GRE com banco Supabase e nova visualização do módulo de Transporte.
+Versão integrada do Portal 8ª GRE com conexão automática ao Supabase na Vercel e calendário de Transporte.
 
-## Novidades da v0.3
-- Calendário mensal de agendamentos de transporte.
-- S10, Logan e Polo identificados por cores.
-- Clique em uma data para visualizar todos os deslocamentos do dia.
-- Alternância entre visualização em Calendário e Lista.
-- Acesso aos detalhes: escola/destino, responsável, participantes, saída, retorno, finalidade e status.
-- Novo agendamento diretamente a partir de uma data vazia do calendário.
-- Validação de conflito de horário para o mesmo veículo.
-- Previsão de retorno passa a ser obrigatória para permitir a verificação de conflito.
+## Novidades da v0.4
+- Conexão automática com o Supabase para todos os computadores e celulares.
+- Usuário não precisa mais informar Project URL nem Publishable Key.
+- Credenciais públicas são lidas das Environment Variables do projeto na Vercel.
+- Mantido fallback de configuração manual apenas para testes técnicos.
+- Tela de login informa o status da conexão.
+- Mantidos calendário mensal de transporte, S10/Logan/Polo, conflito de horário, escolas, visitas e Gestão.
 
-## Publicação
-Substitua os arquivos do repositório GitHub pelos arquivos desta versão. A Vercel fará um novo deployment automaticamente após o commit na branch principal.
+## Configuração única na Vercel
+No projeto `portal8gre`, abra **Environment Variables** e crie:
+
+1. `SUPABASE_URL`
+   - Valor: Project URL do Supabase, no formato `https://xxxxxxxx.supabase.co`
+
+2. `SUPABASE_PUBLISHABLE_KEY`
+   - Valor: chave pública que começa com `sb_publishable_...`
+
+Marque os ambientes desejados (Production, Preview e Development; para começar, ao menos Production).
+Depois faça um novo deployment/redeploy.
+
+A partir daí, qualquer usuário que abrir o Portal precisará apenas de e-mail e senha.
+
+> Nunca cadastre `service_role`, `sb_secret_...` ou outras chaves secretas nesta API pública.
 
 ## Supabase
-Esta versão usa as mesmas tabelas da v0.2. Não é necessário alterar o banco para usar o novo calendário.
+A v0.4 usa as mesmas tabelas do banco da v0.3. Não é necessário executar novamente o `schema.sql` se o banco já foi criado.
+
+## Publicação
+Substitua os arquivos do repositório GitHub pelos desta versão e faça commit na branch principal. A Vercel fará o deployment automaticamente.
