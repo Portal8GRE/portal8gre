@@ -380,6 +380,7 @@
       };
 
       const sharing=findSharingCandidates(payload,id);
+      let savedRecordId = id || null;
 
       if(id){
         const existing=state.transport.find(x=>x.id===id);
@@ -405,6 +406,8 @@
           throw new Error('O Supabase não retornou o registro criado.');
         }
 
+        savedRecordId = saved.id;
+
         toast(
           sharing.length
             ? 'Agendamento salvo. Há outra viagem compatível para possível compartilhamento.'
@@ -416,17 +419,17 @@
       closeModal();
       await loadData();
 
-      // Confirma visualmente que o registro realmente voltou do banco.
-      const existsAfterReload = id
-        ? state.transport.some(x=>x.id===id)
-        : state.transport.some(x=>
-            String(x.data||'').slice(0,10)===String(savedDate||'').slice(0,10) &&
-            x.veiculo===payload.veiculo &&
-            x.hora_saida===payload.hora_saida
-          );
+      // Confirma pelo UUID retornado pelo próprio Supabase.
+      // Evita falso erro causado por formatos diferentes de horário
+      // (ex.: "08:00" no formulário e "08:00:00" no PostgreSQL).
+      const existsAfterReload = savedRecordId
+        ? state.transport.some(x=>x.id===savedRecordId)
+        : true;
 
       if(!existsAfterReload){
-        throw new Error('O banco não devolveu o agendamento após a gravação. Atualize a página e tente novamente.');
+        // O INSERT já foi confirmado pelo RPC. Se a leitura imediata ainda
+        // não refletir o registro, não acusamos falha de gravação.
+        console.warn('Agendamento criado, mas ainda não apareceu na leitura imediata.', savedRecordId);
       }
 
       openTransportDay(savedDate);
@@ -440,7 +443,7 @@
         `<div class="delete-confirm">
           <p>O agendamento não foi gravado.</p>
           <p class="hint"><strong>Mensagem técnica:</strong><br>${esc(msg)}</p>
-          <p class="hint">Versão do módulo: <strong>v0.6.4</strong></p>
+          <p class="hint">Versão do módulo: <strong>v0.6.5</strong></p>
           <div class="modal-actions">
             <button type="button" data-close class="btn primary">Fechar</button>
           </div>

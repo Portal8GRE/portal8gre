@@ -59,3 +59,19 @@ Correção:
 - os scripts receberam `?v=0.6.4` para evitar cache de versões antigas no navegador.
 
 Não é necessário executar novo SQL se `update-v063.sql` já foi executado com Success.
+
+
+## V0.6.5 — correção do falso aviso após salvar
+
+O agendamento já estava sendo gravado no Supabase, mas a V0.6.4 fazia uma
+segunda conferência comparando o horário do formulário (`HH:MM`) com o horário
+retornado pelo PostgreSQL (`HH:MM:SS`). Essa diferença fazia o Portal concluir,
+incorretamente, que o registro não havia voltado do banco.
+
+A V0.6.5:
+- confirma o registro pelo UUID retornado pelo Supabase;
+- não exibe mais o falso aviso de falha;
+- mantém o agendamento salvo normalmente;
+- não exige nenhuma nova alteração SQL no Supabase.
+
+Basta publicar esta versão no GitHub/Vercel.
