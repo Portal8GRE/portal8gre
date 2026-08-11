@@ -368,7 +368,8 @@
         } else {
           payload.status='Confirmado';
           delete payload.created_by;
-          await store.insert('transport',payload); toast(sharing.length?'Agendamento salvo. Há outra viagem compatível para possível compartilhamento.':'Agendamento salvo.');
+          await store.createTransport(payload);
+          toast(sharing.length?'Agendamento salvo. Há outra viagem compatível para possível compartilhamento.':'Agendamento salvo.');
         }
         const savedDate=payload.data;
         closeModal(); await loadData(); openTransportDay(savedDate); return;
@@ -393,13 +394,13 @@
       toast(msg);
       if(form?.id==='transportForm'){
         openModal(
-          'Não foi possível salvar o agendamento',
+          'Não foi possível salvar',
           'Diagnóstico do Transporte',
           `<div class="delete-confirm">
-            <p>O banco recusou o salvamento.</p>
-            <p class="hint"><strong>Mensagem técnica:</strong><br>${esc(msg)}</p>
+            <p>O banco recusou este agendamento.</p>
+            <p class="hint"><strong>Motivo informado pelo Supabase:</strong><br>${esc(msg)}</p>
             <div class="modal-actions">
-              <button type="button" data-close class="btn primary">Entendi</button>
+              <button type="button" data-close class="btn primary">Fechar</button>
             </div>
           </div>`
         );

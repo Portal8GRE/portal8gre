@@ -25,10 +25,19 @@ Execute apenas uma vez no mesmo projeto que já está em uso.
 Substitua os arquivos do mesmo repositório GitHub já conectado à Vercel. Não crie outro projeto Vercel e não altere `SUPABASE_URL` ou `SUPABASE_PUBLISHABLE_KEY`.
 
 
-## V0.6.2 — correção do salvamento do Transporte
+## V0.6.3 — correção definitiva do Transporte
 
-Antes de publicar esta versão:
-1. Execute `supabase/update-v062.sql` no SQL Editor do Supabase.
-2. Depois publique os arquivos desta versão no mesmo repositório GitHub/Vercel.
-3. O banco passa a preencher automaticamente `created_by` com o usuário autenticado.
-4. Caso o banco recuse um agendamento, o Portal agora mostra a mensagem técnica completa em uma janela.
+A V0.6.3 muda o método de criação do agendamento:
+- o front-end não faz mais INSERT direto na tabela `agendamentos_transporte`;
+- o Portal chama a função segura `create_transport_booking`;
+- o próprio banco identifica o usuário autenticado e grava `created_by`;
+- somente `admin` e `gerencia` conseguem criar;
+- os demais usuários continuam somente visualizando;
+- editar e excluir continuam restritos à Gerência/Admin.
+
+### Publicação
+1. Execute `supabase/update-v063.sql` no SQL Editor.
+2. Substitua TODOS os arquivos da aplicação pelos da V0.6.3 no mesmo repositório.
+3. Aguarde o novo deployment da Vercel.
+4. Confirme no rodapé que aparece `v0.6.3`.
+5. Saia e entre novamente no Portal antes do primeiro teste.

@@ -174,6 +174,19 @@
     return data;
   }
 
+
+  async function createTransport(record) {
+    const client = getSupabase();
+    if (!client) throw new Error('Banco Supabase indisponível.');
+
+    const { data, error } = await client.rpc('create_transport_booking', {
+      payload: record
+    });
+
+    if (error) throw error;
+    return Array.isArray(data) ? (data[0] || null) : data;
+  }
+
   async function update(type, id, patch) {
     const client = getSupabase();
     if (!client) throw new Error('Banco Supabase indisponível.');
@@ -244,6 +257,7 @@
     currentSession,
     list,
     insert,
+    createTransport,
     update,
     remove,
     listProfiles,
