@@ -286,7 +286,7 @@
     if(!canManageTransport()){ toast('O agendamento de transporte é exclusivo da Gerência. Seu perfil possui somente visualização.'); return; }
     const editing=!!item;
     const statusSelect = editing ? `<label>Status<select name="status"><option ${item.status==='Solicitado'?'selected':''}>Solicitado</option><option ${item.status==='Confirmado'?'selected':''}>Confirmado</option><option ${item.status==='Realizado'?'selected':''}>Realizado</option><option ${item.status==='Cancelado'?'selected':''}>Cancelado</option></select></label>` : `<input type="hidden" name="status" value="Confirmado">`;
-    openModal(editing?'Editar agendamento':'Novo agendamento','Gerência • Transporte',`<form id="transportForm" class="form-grid"><input type="hidden" name="id" value="${esc(item?.id||'')}"><label>Data<input name="data" type="date" value="${esc(String(item?.data||'').slice(0,10))}" required></label><label>Veículo<select name="veiculo" required><option ${item?.veiculo==='S10'?'selected':''}>S10</option><option ${item?.veiculo==='Logan'?'selected':''}>Logan</option><option ${item?.veiculo==='Polo'?'selected':''}>Polo</option></select></label><label class="full">Escola vinculada (opcional)<select name="escola_id">${schoolOptions(item?.escola_id||'')}</select></label><label>Município / destino<input name="destino" value="${esc(item?.destino||'')}" required></label><label>Responsável<input name="responsavel" value="${esc(item?.responsavel||state.user?.name||'')}" required></label><label>Horário de saída<input name="hora_saida" type="time" value="${esc(String(item?.hora_saida||'').slice(0,5))}" required></label><label>Previsão de retorno<input name="previsao_retorno" type="time" value="${esc(String(item?.previsao_retorno||'').slice(0,5))}" required></label><label class="full">Participantes<input name="participantes" value="${esc(item?.participantes||'')}" placeholder="Nomes separados por vírgula"></label><label class="full">Finalidade<textarea name="finalidade" required>${esc(item?.finalidade||'')}</textarea></label>${statusSelect}<div id="transportSharingAlert" class="full"></div><div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button class="btn transport">${editing?'Salvar alterações':'Salvar agendamento'}</button></div></form>`);
+    openModal(editing?'Editar agendamento':'Novo agendamento','Gerência • Transporte',`<form id="transportForm" class="form-grid" onsubmit="return false;"><input type="hidden" name="id" value="${esc(item?.id||'')}"><label>Data<input name="data" type="date" value="${esc(String(item?.data||'').slice(0,10))}" required></label><label>Veículo<select name="veiculo" required><option ${item?.veiculo==='S10'?'selected':''}>S10</option><option ${item?.veiculo==='Logan'?'selected':''}>Logan</option><option ${item?.veiculo==='Polo'?'selected':''}>Polo</option></select></label><label class="full">Escola vinculada (opcional)<select name="escola_id">${schoolOptions(item?.escola_id||'')}</select></label><label>Município / destino<input name="destino" value="${esc(item?.destino||'')}" required></label><label>Responsável<input name="responsavel" value="${esc(item?.responsavel||state.user?.name||'')}" required></label><label>Horário de saída<input name="hora_saida" type="time" value="${esc(String(item?.hora_saida||'').slice(0,5))}" required></label><label>Previsão de retorno<input name="previsao_retorno" type="time" value="${esc(String(item?.previsao_retorno||'').slice(0,5))}" required></label><label class="full">Participantes<input name="participantes" value="${esc(item?.participantes||'')}" placeholder="Nomes separados por vírgula"></label><label class="full">Finalidade<textarea name="finalidade" required>${esc(item?.finalidade||'')}</textarea></label>${statusSelect}<div id="transportSharingAlert" class="full"></div><div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button type="button" class="btn transport" data-save-transport>${editing?'Salvar alterações':'Salvar agendamento'}</button></div></form>`);
     setTimeout(()=>refreshTransportSharingAlert(),0);
   }
 
@@ -344,6 +344,111 @@
     }
   }
 
+
+  async function saveTransportForm(){
+    const form = $('#transportForm');
+    if(!form) return;
+
+    if(!canManageTransport()){
+      toast('Somente a Gerência pode criar ou alterar agendamentos.');
+      return;
+    }
+
+    // Usa a validação HTML sem disparar submit nativo.
+    if(!form.reportValidity()) return;
+
+    try{
+      const d=formData(form);
+      const id=d.id||null;
+      delete d.id;
+
+      if(timeToMinutes(d.previsao_retorno)<=timeToMinutes(d.hora_saida)){
+        toast('A previsão de retorno deve ser posterior ao horário de saída.');
+        return;
+      }
+
+      if(hasTransportConflict(d,id)){
+        toast(`Conflito: ${d.veiculo} já possui agendamento nesse intervalo.`);
+        return;
+      }
+
+      const school=state.schools.find(s=>s.id===d.escola_id);
+      const payload={
+        ...d,
+        escola_id:d.escola_id||null,
+        escola_nome:school?.nome||null
+      };
+
+      const sharing=findSharingCandidates(payload,id);
+
+      if(id){
+        const existing=state.transport.find(x=>x.id===id);
+        if(!canEditTransport(existing)){
+          toast('Somente a Gerência pode editar.');
+          return;
+        }
+
+        await store.update('transport',id,payload);
+        toast(
+          sharing.length
+            ? 'Agendamento atualizado. Atenção ao possível compartilhamento de transporte.'
+            : 'Agendamento atualizado.'
+        );
+      } else {
+        payload.status='Confirmado';
+        delete payload.created_by;
+
+        // NOVO AGENDAMENTO: usa a RPC segura criada na V0.6.3.
+        const saved = await store.createTransport(payload);
+
+        if(!saved || !saved.id){
+          throw new Error('O Supabase não retornou o registro criado.');
+        }
+
+        toast(
+          sharing.length
+            ? 'Agendamento salvo. Há outra viagem compatível para possível compartilhamento.'
+            : 'Agendamento salvo.'
+        );
+      }
+
+      const savedDate=payload.data;
+      closeModal();
+      await loadData();
+
+      // Confirma visualmente que o registro realmente voltou do banco.
+      const existsAfterReload = id
+        ? state.transport.some(x=>x.id===id)
+        : state.transport.some(x=>
+            String(x.data||'').slice(0,10)===String(savedDate||'').slice(0,10) &&
+            x.veiculo===payload.veiculo &&
+            x.hora_saida===payload.hora_saida
+          );
+
+      if(!existsAfterReload){
+        throw new Error('O banco não devolveu o agendamento após a gravação. Atualize a página e tente novamente.');
+      }
+
+      openTransportDay(savedDate);
+    }catch(err){
+      console.error('Erro ao salvar transporte:', err);
+      const msg = err?.message || 'Erro ao salvar.';
+      toast(msg);
+      openModal(
+        'Não foi possível salvar',
+        'Diagnóstico do Transporte',
+        `<div class="delete-confirm">
+          <p>O agendamento não foi gravado.</p>
+          <p class="hint"><strong>Mensagem técnica:</strong><br>${esc(msg)}</p>
+          <p class="hint">Versão do módulo: <strong>v0.6.4</strong></p>
+          <div class="modal-actions">
+            <button type="button" data-close class="btn primary">Fechar</button>
+          </div>
+        </div>`
+      );
+    }
+  }
+
   async function handleModalSubmit(e){
     const form=e.target; if(!(form instanceof HTMLFormElement)) return;
     try{
@@ -355,24 +460,9 @@
         const d=formData(form); await store.insert('schools',{...d,ativo:true,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Escola cadastrada.'); return;
       }
       if(form.id==='transportForm'){
-        e.preventDefault(); if(!canManageTransport()){ toast('Somente a Gerência pode criar ou alterar agendamentos.'); return; }
-        const d=formData(form); const id=d.id||null; delete d.id;
-        if(timeToMinutes(d.previsao_retorno)<=timeToMinutes(d.hora_saida)){ toast('A previsão de retorno deve ser posterior ao horário de saída.'); return; }
-        if(hasTransportConflict(d,id)){ toast(`Conflito: ${d.veiculo} já possui agendamento nesse intervalo.`); return; }
-        const school=state.schools.find(s=>s.id===d.escola_id);
-        const payload={...d,escola_id:d.escola_id||null,escola_nome:school?.nome||null};
-        const sharing=findSharingCandidates(payload,id);
-        if(id){
-          const existing=state.transport.find(x=>x.id===id); if(!canEditTransport(existing)){ toast('Somente a Gerência pode editar.'); return; }
-          await store.update('transport',id,payload); toast(sharing.length?'Agendamento atualizado. Atenção ao possível compartilhamento de transporte.':'Agendamento atualizado.');
-        } else {
-          payload.status='Confirmado';
-          delete payload.created_by;
-          await store.createTransport(payload);
-          toast(sharing.length?'Agendamento salvo. Há outra viagem compatível para possível compartilhamento.':'Agendamento salvo.');
-        }
-        const savedDate=payload.data;
-        closeModal(); await loadData(); openTransportDay(savedDate); return;
+        e.preventDefault();
+        await saveTransportForm();
+        return;
       }
       if(form.id==='visitForm'){
         e.preventDefault(); const d=formData(form); const school=state.schools.find(s=>s.id===d.escola_id); await store.insert('visits',{...d,escola_nome:school?.nome||null,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Visita salva no histórico.'); return;
@@ -409,6 +499,12 @@
   }
 
   document.addEventListener('click', async e=>{
+    const saveTransport=e.target.closest('[data-save-transport]');
+    if(saveTransport){
+      e.preventDefault();
+      await saveTransportForm();
+      return;
+    }
     const nav=e.target.closest('[data-view]'); if(nav) navigate(nav.dataset.view);
     const go=e.target.closest('[data-go]'); if(go) navigate(go.dataset.go);
     if(e.target.id==='menuToggle') $('.sidebar')?.classList.toggle('open');

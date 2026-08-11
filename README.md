@@ -41,3 +41,21 @@ A V0.6.3 muda o método de criação do agendamento:
 3. Aguarde o novo deployment da Vercel.
 4. Confirme no rodapé que aparece `v0.6.3`.
 5. Saia e entre novamente no Portal antes do primeiro teste.
+
+
+## V0.6.4 — correção do envio do formulário de Transporte
+
+Diagnóstico:
+- o navegador estava enviando o formulário de Transporte como GET;
+- isso era visível porque os campos do agendamento apareciam na URL (`?data=...&veiculo=...`);
+- portanto o problema já não estava no SQL: o front-end não estava interceptando o envio de forma confiável.
+
+Correção:
+- o botão de salvar deixou de ser um botão `submit`;
+- o formulário não pode mais navegar por GET;
+- o salvamento é disparado diretamente por JavaScript;
+- novos registros continuam usando a RPC `create_transport_booking` criada na V0.6.3;
+- após gravar, o sistema recarrega os dados e confirma que o registro realmente voltou do Supabase;
+- os scripts receberam `?v=0.6.4` para evitar cache de versões antigas no navegador.
+
+Não é necessário executar novo SQL se `update-v063.sql` já foi executado com Success.
