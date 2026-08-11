@@ -57,3 +57,18 @@ button:disabled{
   opacity:.65;
   cursor:not-allowed;
 }
+
+/* v0.5 — permissões e fluxo de transporte */
+.booking-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;padding-top:12px;border-top:1px solid var(--border)}
+.btn.danger-outline{background:#fff;color:#b42318;border:1px solid #f0b4ad}
+.btn.danger-outline:hover{background:#fff4f2}
+.btn.small{padding:8px 11px;font-size:.72rem;border-radius:9px}
+.toggle-field{display:flex!important;flex-direction:row!important;align-items:center;gap:9px;background:#f7f9fa;border:1px solid var(--border);border-radius:10px;padding:12px}
+.toggle-field input{width:18px!important;height:18px!important;margin:0}
+.table-wrap small.muted{display:inline-block;margin-top:3px;color:#77838e;font-size:.72rem}
+.status.inativo,.status.cancelado{background:#fff0ee;color:#a13228}
+.status.confirmado{background:#eaf3ff;color:#24558a}
+.status.solicitado{background:#fff8df;color:#846000}
+.status.realizado{background:#eaf7ef;color:#1f7041}
+.users-banner{background:linear-gradient(120deg,#f0eafe,#fbf9ff)}
+@media(max-width:760px){.booking-actions{flex-direction:column}.booking-actions .btn{width:100%}}

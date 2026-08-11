@@ -1,37 +1,15 @@
 (() => {
-  const STORAGE_KEY = 'portal8gre_v01_data';
   const CONFIG_KEY = 'portal8gre_supabase_config';
-
-  const seed = {
-    schools: [],
-    transport: [],
-    visits: [],
-    management: []
-  };
 
   let runtimeConfig = null;
   let configSource = 'none';
   let sb = null;
 
-  function readLocal() {
-    try {
-      return { ...seed, ...(JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}) };
-    } catch {
-      return structuredClone(seed);
-    }
-  }
-
-  function writeLocal(data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }
-
   function getSavedConfig() {
     try { return JSON.parse(localStorage.getItem(CONFIG_KEY)) || null; } catch { return null; }
   }
 
-  function getConfig() {
-    return runtimeConfig || getSavedConfig();
-  }
+  function getConfig() { return runtimeConfig || getSavedConfig(); }
 
   function setConfig(config) {
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
@@ -50,8 +28,6 @@
   function getConfigSource() { return configSource; }
 
   async function init() {
-    // Em produção na Vercel, a configuração é carregada automaticamente
-    // de /api/public-config, alimentado pelas Environment Variables do projeto.
     if (location.protocol === 'http:' || location.protocol === 'https:') {
       try {
         const response = await fetch('/api/public-config', {
@@ -118,20 +94,39 @@
     return true;
   }
 
+  async function getProfile(userId, email = '') {
+    const client = getSupabase();
+    const { data, error } = await client
+      .from('profiles')
+      .select('id,nome,role,setor_id,escola_id,ativo')
+      .eq('id', userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) throw new Error('Perfil de acesso não encontrado. Procure o administrador do sistema.');
+    if (data.ativo === false) throw new Error('Este usuário está inativo. Procure a Gerência ou o administrador.');
+    return {
+      id: userId,
+      email,
+      name: data.nome || email?.split('@')[0] || 'Usuário',
+      role: data.role || 'tecnico',
+      setor_id: data.setor_id || null,
+      escola_id: data.escola_id || null,
+      ativo: data.ativo !== false,
+      online: true
+    };
+  }
+
   async function signIn(email, password) {
     const client = getSupabase();
     if (!client) throw new Error('Banco Supabase não configurado. O administrador deve configurar as variáveis do projeto na Vercel.');
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    const { data: profileData } = await client.from('profiles').select('id,nome,role,setor_id').eq('id', data.user.id).maybeSingle();
-    return {
-      id: data.user.id,
-      email: data.user.email,
-      name: profileData?.nome || data.user.email?.split('@')[0] || 'Usuário',
-      role: profileData?.role || 'tecnico',
-      setor_id: profileData?.setor_id || null,
-      online: true
-    };
+    try {
+      return await getProfile(data.user.id, data.user.email);
+    } catch (err) {
+      await client.auth.signOut();
+      throw err;
+    }
   }
 
   async function signOut() {
@@ -144,15 +139,12 @@
     if (!client) return null;
     const { data } = await client.auth.getUser();
     if (!data?.user) return null;
-    const { data: profileData } = await client.from('profiles').select('id,nome,role,setor_id').eq('id', data.user.id).maybeSingle();
-    return {
-      id: data.user.id,
-      email: data.user.email,
-      name: profileData?.nome || data.user.email?.split('@')[0] || 'Usuário',
-      role: profileData?.role || 'tecnico',
-      setor_id: profileData?.setor_id || null,
-      online: true
-    };
+    try {
+      return await getProfile(data.user.id, data.user.email);
+    } catch {
+      await client.auth.signOut();
+      return null;
+    }
   }
 
   const tableMap = {
@@ -164,8 +156,9 @@
 
   async function list(type) {
     const client = getSupabase();
-    if (!client) return readLocal()[type] || [];
+    if (!client) throw new Error('Banco Supabase indisponível.');
     const table = tableMap[type];
+    if (!table) throw new Error('Tipo de dado inválido.');
     const { data, error } = await client.from(table).select('*').order('created_at', { ascending: false });
     if (error) throw error;
     return data || [];
@@ -173,14 +166,9 @@
 
   async function insert(type, record) {
     const client = getSupabase();
-    if (!client) {
-      const data = readLocal();
-      const item = { id: crypto.randomUUID(), created_at: new Date().toISOString(), ...record };
-      data[type].unshift(item);
-      writeLocal(data);
-      return item;
-    }
+    if (!client) throw new Error('Banco Supabase indisponível.');
     const table = tableMap[type];
+    if (!table) throw new Error('Tipo de dado inválido.');
     const { data, error } = await client.from(table).insert(record).select().single();
     if (error) throw error;
     return data;
@@ -188,30 +176,48 @@
 
   async function update(type, id, patch) {
     const client = getSupabase();
-    if (!client) {
-      const data = readLocal();
-      const idx = data[type].findIndex(x => x.id === id);
-      if (idx >= 0) data[type][idx] = { ...data[type][idx], ...patch, updated_at: new Date().toISOString() };
-      writeLocal(data);
-      return data[type][idx];
-    }
+    if (!client) throw new Error('Banco Supabase indisponível.');
     const table = tableMap[type];
+    if (!table) throw new Error('Tipo de dado inválido.');
     const { data, error } = await client.from(table).update(patch).eq('id', id).select().single();
     if (error) throw error;
     return data;
   }
 
-  async function remove(type, id) {
+  async function listProfiles() {
     const client = getSupabase();
-    if (!client) {
-      const data = readLocal();
-      data[type] = data[type].filter(x => x.id !== id);
-      writeLocal(data);
-      return;
-    }
-    const table = tableMap[type];
-    const { error } = await client.from(table).delete().eq('id', id);
+    if (!client) throw new Error('Banco Supabase indisponível.');
+    const { data, error } = await client
+      .from('profiles')
+      .select('id,nome,role,setor_id,escola_id,ativo,created_at')
+      .order('nome', { ascending: true });
     if (error) throw error;
+    return data || [];
+  }
+
+  async function updateProfile(id, patch) {
+    const client = getSupabase();
+    if (!client) throw new Error('Banco Supabase indisponível.');
+    const { data, error } = await client
+      .from('profiles')
+      .update(patch)
+      .eq('id', id)
+      .select('id,nome,role,setor_id,escola_id,ativo,created_at')
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
+  async function listSectors() {
+    const client = getSupabase();
+    if (!client) throw new Error('Banco Supabase indisponível.');
+    const { data, error } = await client
+      .from('setores')
+      .select('id,nome,slug,ativo')
+      .eq('ativo', true)
+      .order('nome', { ascending: true });
+    if (error) throw error;
+    return data || [];
   }
 
   window.PortalStore = {
@@ -229,6 +235,8 @@
     list,
     insert,
     update,
-    remove
+    listProfiles,
+    updateProfile,
+    listSectors
   };
 })();

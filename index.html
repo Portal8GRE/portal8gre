@@ -351,9 +351,27 @@
       </section>
 
       <section id="usuarios" class="view">
-        <div class="module-banner users-banner"><div><p class="eyebrow">Administração do Sistema</p><h1>Usuários e Permissões</h1><p>Controle de acesso por perfil, setor e responsabilidade.</p></div></div>
-        <div class="info-banner">Nesta versão, o cadastro de usuários online deve ser feito pelo ambiente administrativo do Supabase. O painel completo de criação de contas será adicionado em uma próxima etapa.</div>
-        <article class="panel"><div class="panel-header"><div><p class="eyebrow">Perfis previstos</p><h3>Níveis de acesso</h3></div></div><div class="roles-grid"><div><strong>Administrador</strong><span>Acesso total e configurações</span></div><div><strong>Gerência</strong><span>Visão geral de todos os módulos</span></div><div><strong>Coordenação</strong><span>Acompanha o setor sob sua responsabilidade</span></div><div><strong>Técnico</strong><span>Registra e acompanha suas atividades</span></div><div><strong>Escola</strong><span>Acesso aos serviços destinados à unidade escolar</span></div></div></article>
+        <div class="module-banner users-banner">
+          <div><p class="eyebrow">Administração do Sistema</p><h1>Usuários e Permissões</h1><p>Gerência e administrador organizam perfil, setor, escola vinculada e situação de acesso.</p></div>
+        </div>
+        <div class="info-banner"><strong>Criação da conta:</strong> por segurança, a conta de login ainda é criada em <strong>Supabase → Authentication → Users</strong>. Depois disso, ela aparece automaticamente nesta tela para a Gerência definir as permissões.</div>
+        <article class="panel">
+          <div class="panel-header wrap">
+            <div><p class="eyebrow">Acessos</p><h3>Usuários cadastrados</h3></div>
+            <input id="userSearch" placeholder="Buscar usuário ou perfil" />
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Usuário</th><th>Perfil</th><th>Setor</th><th>Escola</th><th>Situação</th><th></th></tr></thead>
+              <tbody id="usersTable"></tbody>
+            </table>
+          </div>
+          <div id="usersEmpty" class="empty-block">Nenhum usuário disponível para este perfil.</div>
+        </article>
+        <article class="panel">
+          <div class="panel-header"><div><p class="eyebrow">Perfis</p><h3>Níveis de acesso</h3></div></div>
+          <div class="roles-grid"><div><strong>Administrador</strong><span>Acesso total e configurações</span></div><div><strong>Gerência</strong><span>Visão geral e controle do Transporte</span></div><div><strong>Coordenação</strong><span>Acompanha os registros do seu setor</span></div><div><strong>Técnico</strong><span>Solicita e registra suas atividades</span></div><div><strong>Escola</strong><span>Acesso aos serviços destinados à unidade escolar</span></div></div>
+        </article>
       </section>
 
       <section id="configuracoes" class="view">
