@@ -60,19 +60,6 @@
             <button class="btn primary full" type="submit">Entrar</button>
           </form>
 
-          <div class="divider"><span>ou</span></div>
-          <div class="demo-box">
-            <label>Perfil para demonstração
-              <select id="demoRole">
-                <option value="gerencia">Gerência Regional</option>
-                <option value="coordenacao">Coordenação</option>
-                <option value="tecnico">Técnico da GRE</option>
-                <option value="escola">Escola</option>
-                <option value="admin">Administrador</option>
-              </select>
-            </label>
-            <button id="demoLogin" class="btn secondary full" type="button">Entrar em modo demonstração</button>
-          </div>
           <div id="loginDbStatus" class="login-db-status"><span class="connection-dot"></span> Verificando conexão com o banco...</div><button id="openDbConfig" class="text-button" type="button">Configuração técnica do banco</button>
         </div>
       </div>
@@ -137,7 +124,7 @@
           <h2 id="pageTitle">Painel Geral</h2>
         </div>
         <div class="top-actions">
-          <span id="storageBadge" class="badge demo">Modo demonstração</span>
+          <span id="storageBadge" class="badge online">Banco online</span>
           <button class="utility-link" data-view="escolas">🏫 Escolas</button>
           <button class="utility-link admin-only" data-view="usuarios">👥 Usuários</button>
           <button class="utility-link admin-only" data-view="configuracoes">⚙ Configurações</button>

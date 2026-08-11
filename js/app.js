@@ -258,9 +258,6 @@
     await handleModalSubmit(e);
   });
 
-  $('#demoLogin').addEventListener('click', async ()=>{
-    const role=$('#demoRole').value; const user={id:'demo-user',name:role==='gerencia'?'Gerência Regional':'Usuário Demonstração',role,online:false}; store.setDemoSession(user); await showApp(user);
-  });
   $('#schoolSearch').addEventListener('input',renderSchools);
   $('#transportSearch').addEventListener('input',renderTransport); $('#transportStatusFilter').addEventListener('change',renderTransport);
   $('#visitSearch').addEventListener('input',renderVisits);

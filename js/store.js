@@ -1,7 +1,6 @@
 (() => {
   const STORAGE_KEY = 'portal8gre_v01_data';
   const CONFIG_KEY = 'portal8gre_supabase_config';
-  const SESSION_KEY = 'portal8gre_demo_session';
 
   const seed = {
     schools: [],
@@ -90,13 +89,6 @@
     return { configured: false, source: 'none' };
   }
 
-  function getDemoSession() {
-    try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)) || null; } catch { return null; }
-  }
-
-  function setDemoSession(session) { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); }
-  function clearDemoSession() { sessionStorage.removeItem(SESSION_KEY); }
-
   function createSupabaseClient() {
     const config = getConfig();
     if (!config?.url || !config?.key || !window.supabase?.createClient) return null;
@@ -145,12 +137,9 @@
   async function signOut() {
     const client = getSupabase();
     if (client) await client.auth.signOut();
-    clearDemoSession();
   }
 
   async function currentSession() {
-    const demo = getDemoSession();
-    if (demo) return demo;
     const client = getSupabase();
     if (!client) return null;
     const { data } = await client.auth.getUser();
@@ -237,8 +226,6 @@
     signIn,
     signOut,
     currentSession,
-    setDemoSession,
-    clearDemoSession,
     list,
     insert,
     update,

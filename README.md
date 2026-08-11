@@ -1,3 +1,7 @@
+# Portal 8ª GRE — V0.4.1 Produção
+
+**Modo demonstração removido.** Esta versão aceita somente autenticação real pelo Supabase.
+
 # Portal 8ª GRE — v0.4
 
 Versão integrada do Portal 8ª GRE com conexão automática ao Supabase na Vercel e calendário de Transporte.
