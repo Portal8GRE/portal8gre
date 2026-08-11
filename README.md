@@ -1,50 +1,25 @@
-# Portal 8ª GRE — V0.5
+# Portal 8ª GRE — V0.6
 
-Versão de produção com autenticação real pelo Supabase, conexão automática pela Vercel e avanço do módulo de Transporte e permissões.
+Versão de produção com autenticação Supabase, conexão automática pela Vercel e atualização do módulo de Agendamento de Transporte.
 
-## Novidades da V0.5
+## Novidades da V0.6
 
-- Mantido somente login real; não existe modo demonstração.
-- Transporte com calendário e lista.
-- Todos os usuários ativos podem visualizar a agenda de Transporte.
-- Usuários podem solicitar transporte.
-- O solicitante pode editar ou cancelar a própria solicitação enquanto ela estiver em **Solicitado**.
-- Gerência e Administrador podem confirmar, editar, marcar como realizado ou cancelar qualquer agendamento.
-- Bloqueio de conflito de horário para o mesmo veículo.
-- Painel **Usuários e Permissões** para Gerência/Administrador:
-  - nome;
-  - perfil;
-  - setor;
-  - escola vinculada;
-  - ativo/inativo.
-- Usuário marcado como inativo não consegue permanecer logado no Portal.
-- RLS reforçada para reduzir alterações indevidas.
+- Agendamento de Transporte exclusivo da Gerência Regional (Administrador mantém acesso técnico).
+- Coordenação, técnicos e escolas ficam em modo somente visualização no Transporte.
+- Gerência pode criar, editar, cancelar, marcar como realizado e excluir agendamentos.
+- Após excluir, o sistema reabre a agenda do mesmo dia com opção de criar novo agendamento.
+- Alerta amarelo quando já existe viagem para a mesma escola ou município na mesma data, sugerindo compartilhamento de veículo e/ou horário.
+- Mantido bloqueio de conflito quando o mesmo veículo já está ocupado no intervalo informado.
+- Auditoria automática de INSERT, UPDATE e DELETE do Transporte no `audit_log`.
 
-## IMPORTANTE — atualização do Supabase
+## Atualização do banco
 
-Se você já usa o banco das versões anteriores, execute **uma vez** no SQL Editor:
+Antes de publicar a V0.6, execute no Supabase SQL Editor:
 
-`supabase/update-v05.sql`
+`supabase/update-v06.sql`
 
-Essa atualização preserva os registros existentes e apenas acrescenta/ajusta campos, funções e políticas de segurança.
-
-## Como cadastrar um novo usuário
-
-Nesta versão, a conta de login continua sendo criada com segurança em:
-
-**Supabase → Authentication → Users → Add user**
-
-Ao criar a conta, o perfil é gerado automaticamente. Depois entre no Portal como Administrador ou Gerência e abra **Usuários** para escolher perfil, setor e escola.
-
-## Vercel
-
-Mantenha as Environment Variables já configuradas:
-
-- `SUPABASE_URL`
-- `SUPABASE_PUBLISHABLE_KEY`
-
-Não use `service_role`, `sb_secret_...` ou outra chave secreta no navegador.
+Execute apenas uma vez no mesmo projeto que já está em uso.
 
 ## Publicação
 
-Substitua os arquivos do mesmo repositório GitHub pelos desta versão e faça commit na branch principal. A Vercel fará um novo deployment automaticamente.
+Substitua os arquivos do mesmo repositório GitHub já conectado à Vercel. Não crie outro projeto Vercel e não altere `SUPABASE_URL` ou `SUPABASE_PUBLISHABLE_KEY`.

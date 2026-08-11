@@ -72,3 +72,19 @@ button:disabled{
 .status.realizado{background:#eaf7ef;color:#1f7041}
 .users-banner{background:linear-gradient(120deg,#f0eafe,#fbf9ff)}
 @media(max-width:760px){.booking-actions{flex-direction:column}.booking-actions .btn{width:100%}}
+
+/* v0.6 — transporte exclusivo da Gerência + alerta de compartilhamento */
+.transport-access-note{margin-bottom:14px}
+.calendar-event.sharing{outline:2px solid #f5c451;outline-offset:1px}
+.transport-sharing-alert{background:#fff8df;border:1px solid #efd779;border-left:5px solid #d89c00;border-radius:12px;padding:13px 14px;color:#694f00}
+.transport-sharing-alert strong{display:block;margin-bottom:4px;color:#624800}
+.transport-sharing-alert p{margin:4px 0 10px;line-height:1.45;font-size:.82rem}
+.transport-sharing-alert.day-alert{margin-bottom:12px}
+.sharing-list{display:grid;gap:7px}
+.sharing-list>div{display:flex;justify-content:space-between;gap:12px;background:rgba(255,255,255,.75);border-radius:8px;padding:8px 9px;font-size:.74rem}
+.sharing-list span{color:#75641d;text-align:right}
+.day-add-transport{display:flex;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.delete-confirm p{line-height:1.55}
+.btn.danger{background:#b42318;color:#fff;border:1px solid #b42318}
+.btn.danger:hover{background:#8f1c13}
+@media(max-width:760px){.sharing-list>div{flex-direction:column}.sharing-list span{text-align:left}.day-add-transport .btn{width:100%}}

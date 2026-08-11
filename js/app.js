@@ -22,9 +22,9 @@
   function setText(selector, value){ const el=$(selector); if(el) el.textContent=value; }
   function isExecutive(){ return ['admin','gerencia'].includes(state.user?.role); }
   function isManager(){ return ['admin','gerencia','coordenacao'].includes(state.user?.role); }
-  function isTransportOwner(item){ return !!state.user?.id && item?.created_by === state.user.id; }
-  function canEditTransport(item){ return isExecutive() || (isTransportOwner(item) && item?.status === 'Solicitado'); }
-  function canChangeTransportStatus(item){ return isExecutive() || (isTransportOwner(item) && item?.status === 'Solicitado'); }
+  function canManageTransport(){ return ['admin','gerencia'].includes(state.user?.role); }
+  function canEditTransport(){ return canManageTransport(); }
+  function canChangeTransportStatus(){ return canManageTransport(); }
 
   async function loadData(){
     try {
@@ -51,6 +51,7 @@
     setText('#userAvatar', (user.name || 'U').trim()[0].toUpperCase());
     $$('.admin-only').forEach(el => el.classList.toggle('hidden', !isExecutive()));
     const schoolBtn=$('#newSchoolBtn'); if(schoolBtn) schoolBtn.classList.toggle('hidden', !isManager());
+    const transportBtn=$('#newTransportBtn'); if(transportBtn) transportBtn.classList.toggle('hidden', !canManageTransport());
     setText('#storageBadge','Banco online');
     const badge=$('#storageBadge'); if(badge) badge.className='badge online';
     setText('#dbStatusText','O sistema está conectado ao Supabase e os dados são gravados no banco online.');
@@ -142,7 +143,8 @@
     for(let d=1;d<=days;d++){
       const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const events=state.transport.filter(x=>String(x.data).slice(0,10)===key && x.status!=='Cancelado').sort((a,b)=>String(a.hora_saida||'').localeCompare(String(b.hora_saida||'')));
-      const shown=events.slice(0,3).map(x=>`<div class="calendar-event ${transportVehicleClass(x.veiculo)}" title="${esc(x.veiculo)} • ${esc(x.destino||x.escola_nome||'')}">${esc(x.veiculo)} • ${esc(x.destino||x.escola_nome||'Destino')}</div>`).join('');
+      const sharingIds=new Set(findSharingCandidatesForDate(key).flatMap(g=>g.items.map(i=>i.id)));
+      const shown=events.slice(0,3).map(x=>`<div class="calendar-event ${transportVehicleClass(x.veiculo)} ${sharingIds.has(x.id)?'sharing':''}" title="${esc(x.veiculo)} • ${esc(x.destino||x.escola_nome||'')}">${sharingIds.has(x.id)?'⚠ ':''}${esc(x.veiculo)} • ${esc(x.destino||x.escola_nome||'Destino')}</div>`).join('');
       const more=events.length>3?`<div class="calendar-more">+${events.length-3} agendamento(s)</div>`:'';
       cells.push(`<button type="button" class="calendar-day ${key===todayKey?'today':''}" data-calendar-date="${key}"><span class="calendar-day-num">${d}</span><div class="calendar-events">${shown}${more}</div></button>`);
     }
@@ -152,31 +154,74 @@
   }
 
   function transportActionButtons(item){
-    const out=[];
-    if(canEditTransport(item)) out.push(`<button class="btn secondary small" type="button" data-edit-transport="${esc(item.id)}">Editar</button>`);
-    if(isExecutive()){
-      if(item.status==='Solicitado') out.push(`<button class="btn transport small" type="button" data-set-transport-status="${esc(item.id)}" data-status="Confirmado">Confirmar</button>`);
-      if(item.status==='Confirmado') out.push(`<button class="btn primary small" type="button" data-set-transport-status="${esc(item.id)}" data-status="Realizado">Marcar realizado</button>`);
-      if(!['Cancelado','Realizado'].includes(item.status)) out.push(`<button class="btn danger-outline small" type="button" data-set-transport-status="${esc(item.id)}" data-status="Cancelado">Cancelar</button>`);
-    } else if(isTransportOwner(item) && item.status==='Solicitado'){
-      out.push(`<button class="btn danger-outline small" type="button" data-set-transport-status="${esc(item.id)}" data-status="Cancelado">Cancelar solicitação</button>`);
-    }
-    return out.length ? `<div class="booking-actions">${out.join('')}</div>` : '';
+    if(!canManageTransport()) return '';
+    const out=[
+      `<button class="btn secondary small" type="button" data-edit-transport="${esc(item.id)}">Editar</button>`,
+      `<button class="btn danger-outline small" type="button" data-delete-transport="${esc(item.id)}">Excluir</button>`
+    ];
+    if(item.status==='Solicitado') out.push(`<button class="btn transport small" type="button" data-set-transport-status="${esc(item.id)}" data-status="Confirmado">Confirmar</button>`);
+    if(item.status==='Confirmado') out.push(`<button class="btn primary small" type="button" data-set-transport-status="${esc(item.id)}" data-status="Realizado">Marcar realizado</button>`);
+    if(!['Cancelado','Realizado'].includes(item.status)) out.push(`<button class="btn danger-outline small" type="button" data-set-transport-status="${esc(item.id)}" data-status="Cancelado">Cancelar</button>`);
+    return `<div class="booking-actions">${out.join('')}</div>`;
   }
 
   function transportDetailsHtml(item){
     return `<article class="day-booking"><div class="day-booking-head"><div><p class="eyebrow">${esc(item.status||'Solicitado')}</p><h3>${esc(item.finalidade||'Deslocamento')}</h3></div><span class="vehicle-chip ${transportVehicleClass(item.veiculo)}">${esc(item.veiculo||'—')}</span></div><div class="booking-detail-grid"><div class="booking-detail"><small>Escola / destino</small><strong>${esc(item.escola_nome||item.destino||'—')}</strong></div><div class="booking-detail"><small>Município / destino</small><strong>${esc(item.destino||'—')}</strong></div><div class="booking-detail"><small>Responsável</small><strong>${esc(item.responsavel||'—')}</strong></div><div class="booking-detail"><small>Quem irá</small><strong>${esc(item.participantes||'—')}</strong></div><div class="booking-detail"><small>Saída da 8ª GRE</small><strong>${esc(item.hora_saida||'—')}</strong></div><div class="booking-detail"><small>Previsão de retorno</small><strong>${esc(item.previsao_retorno||'—')}</strong></div></div><div class="booking-purpose"><strong>Finalidade:</strong> ${esc(item.finalidade||'—')}</div>${transportActionButtons(item)}</article>`;
   }
 
+  function normTransportText(v=''){
+    return String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  }
+
+  function sameSchoolOrCity(a,b){
+    const sameSchool = a.escola_id && b.escola_id && a.escola_id===b.escola_id;
+    const cityA=normTransportText(a.destino), cityB=normTransportText(b.destino);
+    const sameCity = cityA && cityB && cityA===cityB;
+    return sameSchool || sameCity;
+  }
+
+  function findSharingCandidates(item, ignoreId=null){
+    const date=String(item.data||'').slice(0,10);
+    if(!date) return [];
+    return state.transport
+      .filter(x=>x.id!==ignoreId && x.status!=='Cancelado' && String(x.data||'').slice(0,10)===date && sameSchoolOrCity(item,x))
+      .sort((a,b)=>String(a.hora_saida||'').localeCompare(String(b.hora_saida||'')));
+  }
+
+  function findSharingCandidatesForDate(key){
+    const day=state.transport.filter(x=>x.status!=='Cancelado' && String(x.data||'').slice(0,10)===key);
+    const groups=[];
+    const seen=new Set();
+    for(const item of day){
+      if(seen.has(item.id)) continue;
+      const related=day.filter(x=>x.id!==item.id && sameSchoolOrCity(item,x));
+      if(related.length){
+        const items=[item,...related].filter((x,i,arr)=>arr.findIndex(y=>y.id===x.id)===i);
+        items.forEach(x=>seen.add(x.id));
+        groups.push({items});
+      }
+    }
+    return groups;
+  }
+
+  function sharingAlertHtml(item, ignoreId=null){
+    const matches=findSharingCandidates(item,ignoreId);
+    if(!matches.length) return '';
+    return `<div class="transport-sharing-alert"><strong>⚠ Possibilidade de compartilhar o transporte</strong><p>Já existe ${matches.length===1?'uma viagem':'viagens'} para a mesma escola ou município nesta data. Verifique se as equipes podem utilizar o mesmo veículo e/ou horário.</p><div class="sharing-list">${matches.map(x=>`<div><strong>${esc(x.hora_saida||'—')} • ${esc(x.veiculo||'—')}</strong><span>${esc(x.escola_nome||x.destino||'Destino')} • retorno ${esc(x.previsao_retorno||'—')}</span></div>`).join('')}</div></div>`;
+  }
+
   function openTransportDay(key){
     const list=state.transport.filter(x=>String(x.data).slice(0,10)===key).sort((a,b)=>String(a.hora_saida||'').localeCompare(String(b.hora_saida||'')));
     const [y,m,d]=key.split('-').map(Number);
     const title=`${String(d).padStart(2,'0')} de ${transportMonthNames[m-1]} de ${y}`;
+    const addButton=canManageTransport()?`<div class="day-add-transport"><button type="button" class="btn transport" data-new-transport-date="${key}">+ Novo agendamento nesta data</button></div>`:'';
+    const groups=findSharingCandidatesForDate(key);
+    const alert=groups.length?`<div class="transport-sharing-alert day-alert"><strong>⚠ Atenção: há deslocamentos para a mesma escola ou município</strong><p>Conversem com as equipes para verificar a possibilidade de compartilharem veículo e/ou horário.</p></div>`:'';
     if(!list.length){
-      openModal(title,'Agenda do dia',`<div class="calendar-empty-day">Nenhum transporte agendado para esta data.<br><button type="button" class="btn transport" data-new-transport-date="${key}">+ Agendar transporte</button></div>`);
+      openModal(title,'Agenda do dia',`<div class="calendar-empty-day">Nenhum transporte agendado para esta data.${addButton}</div>`);
       return;
     }
-    openModal(title,'Agenda do dia',`<div class="day-bookings">${list.map(transportDetailsHtml).join('')}</div>`);
+    openModal(title,'Agenda do dia',`${alert}<div class="day-bookings">${list.map(transportDetailsHtml).join('')}</div>${addButton}`);
   }
 
   function timeToMinutes(v){ if(!v) return null; const [h,m]=String(v).slice(0,5).split(':').map(Number); return h*60+m; }
@@ -238,10 +283,20 @@
   }
 
   function openTransportForm(item=null){
-    if(item && !canEditTransport(item)){ toast('Você possui acesso somente para visualizar este agendamento.'); return; }
+    if(!canManageTransport()){ toast('O agendamento de transporte é exclusivo da Gerência. Seu perfil possui somente visualização.'); return; }
     const editing=!!item;
-    const statusSelect = isExecutive() && editing ? `<label>Status<select name="status"><option ${item.status==='Solicitado'?'selected':''}>Solicitado</option><option ${item.status==='Confirmado'?'selected':''}>Confirmado</option><option ${item.status==='Realizado'?'selected':''}>Realizado</option><option ${item.status==='Cancelado'?'selected':''}>Cancelado</option></select></label>` : `<input type="hidden" name="status" value="${esc(item?.status||'Solicitado')}">`;
-    openModal(editing?'Editar agendamento':'Novo agendamento','Transporte',`<form id="transportForm" class="form-grid"><input type="hidden" name="id" value="${esc(item?.id||'')}"><label>Data<input name="data" type="date" value="${esc(String(item?.data||'').slice(0,10))}" required></label><label>Veículo<select name="veiculo" required><option ${item?.veiculo==='S10'?'selected':''}>S10</option><option ${item?.veiculo==='Logan'?'selected':''}>Logan</option><option ${item?.veiculo==='Polo'?'selected':''}>Polo</option></select></label><label class="full">Escola vinculada (opcional)<select name="escola_id">${schoolOptions(item?.escola_id||'')}</select></label><label>Município / destino<input name="destino" value="${esc(item?.destino||'')}" required></label><label>Responsável<input name="responsavel" value="${esc(item?.responsavel||state.user?.name||'')}" required></label><label>Horário de saída<input name="hora_saida" type="time" value="${esc(String(item?.hora_saida||'').slice(0,5))}" required></label><label>Previsão de retorno<input name="previsao_retorno" type="time" value="${esc(String(item?.previsao_retorno||'').slice(0,5))}" required></label><label class="full">Participantes<input name="participantes" value="${esc(item?.participantes||'')}" placeholder="Nomes separados por vírgula"></label><label class="full">Finalidade<textarea name="finalidade" required>${esc(item?.finalidade||'')}</textarea></label>${statusSelect}<div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button class="btn transport">${editing?'Salvar alterações':'Solicitar agendamento'}</button></div></form>`);
+    const statusSelect = editing ? `<label>Status<select name="status"><option ${item.status==='Solicitado'?'selected':''}>Solicitado</option><option ${item.status==='Confirmado'?'selected':''}>Confirmado</option><option ${item.status==='Realizado'?'selected':''}>Realizado</option><option ${item.status==='Cancelado'?'selected':''}>Cancelado</option></select></label>` : `<input type="hidden" name="status" value="Confirmado">`;
+    openModal(editing?'Editar agendamento':'Novo agendamento','Gerência • Transporte',`<form id="transportForm" class="form-grid"><input type="hidden" name="id" value="${esc(item?.id||'')}"><label>Data<input name="data" type="date" value="${esc(String(item?.data||'').slice(0,10))}" required></label><label>Veículo<select name="veiculo" required><option ${item?.veiculo==='S10'?'selected':''}>S10</option><option ${item?.veiculo==='Logan'?'selected':''}>Logan</option><option ${item?.veiculo==='Polo'?'selected':''}>Polo</option></select></label><label class="full">Escola vinculada (opcional)<select name="escola_id">${schoolOptions(item?.escola_id||'')}</select></label><label>Município / destino<input name="destino" value="${esc(item?.destino||'')}" required></label><label>Responsável<input name="responsavel" value="${esc(item?.responsavel||state.user?.name||'')}" required></label><label>Horário de saída<input name="hora_saida" type="time" value="${esc(String(item?.hora_saida||'').slice(0,5))}" required></label><label>Previsão de retorno<input name="previsao_retorno" type="time" value="${esc(String(item?.previsao_retorno||'').slice(0,5))}" required></label><label class="full">Participantes<input name="participantes" value="${esc(item?.participantes||'')}" placeholder="Nomes separados por vírgula"></label><label class="full">Finalidade<textarea name="finalidade" required>${esc(item?.finalidade||'')}</textarea></label>${statusSelect}<div id="transportSharingAlert" class="full"></div><div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button class="btn transport">${editing?'Salvar alterações':'Salvar agendamento'}</button></div></form>`);
+    setTimeout(()=>refreshTransportSharingAlert(),0);
+  }
+
+  function refreshTransportSharingAlert(){
+    const form=$('#transportForm'); if(!form) return;
+    const d=formData(form);
+    const school=state.schools.find(s=>s.id===d.escola_id);
+    const item={...d,escola_id:d.escola_id||null,escola_nome:school?.nome||null};
+    const target=$('#transportSharingAlert');
+    if(target) target.innerHTML=sharingAlertHtml(item,d.id||null);
   }
 
   function openTransportItem(item){
@@ -264,9 +319,29 @@
 
   async function updateTransportStatus(id,status){
     const item=state.transport.find(x=>x.id===id); if(!item) return;
-    if(!canChangeTransportStatus(item)){ toast('Você não possui permissão para alterar este status.'); return; }
-    if(!isExecutive() && status!=='Cancelado'){ toast('A confirmação e conclusão são exclusivas da Gerência.'); return; }
+    if(!canChangeTransportStatus(item)){ toast('Somente a Gerência pode alterar o agendamento de transporte.'); return; }
     try{ await store.update('transport',id,{status}); closeModal(); await loadData(); toast(`Agendamento atualizado para ${status}.`); }catch(err){ console.error(err); toast(err.message||'Erro ao atualizar agendamento.'); }
+  }
+
+  function confirmDeleteTransport(item){
+    if(!canManageTransport()){ toast('Somente a Gerência pode excluir agendamentos.'); return; }
+    openModal('Excluir agendamento?','Gerência • Transporte',`<div class="delete-confirm"><p>Você está prestes a excluir o agendamento de <strong>${esc(fmtDate(item.data))}</strong>, veículo <strong>${esc(item.veiculo||'—')}</strong>, destino <strong>${esc(item.escola_nome||item.destino||'—')}</strong>.</p><p class="hint">A exclusão será registrada no histórico de auditoria.</p><div class="modal-actions"><button type="button" data-close class="btn secondary">Voltar</button><button type="button" class="btn danger" data-confirm-delete-transport="${esc(item.id)}">Excluir agendamento</button></div></div>`);
+  }
+
+  async function deleteTransportItem(id){
+    const item=state.transport.find(x=>x.id===id); if(!item) return;
+    if(!canManageTransport()){ toast('Somente a Gerência pode excluir agendamentos.'); return; }
+    const date=String(item.data||'').slice(0,10);
+    try{
+      await store.remove('transport',id);
+      closeModal();
+      await loadData();
+      toast('Agendamento excluído. Você pode criar um novo agendamento para a mesma data.');
+      openTransportDay(date);
+    }catch(err){
+      console.error(err);
+      toast(err.message||'Erro ao excluir agendamento.');
+    }
   }
 
   async function handleModalSubmit(e){
@@ -280,20 +355,22 @@
         const d=formData(form); await store.insert('schools',{...d,ativo:true,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Escola cadastrada.'); return;
       }
       if(form.id==='transportForm'){
-        e.preventDefault(); const d=formData(form); const id=d.id||null; delete d.id;
+        e.preventDefault(); if(!canManageTransport()){ toast('Somente a Gerência pode criar ou alterar agendamentos.'); return; }
+        const d=formData(form); const id=d.id||null; delete d.id;
         if(timeToMinutes(d.previsao_retorno)<=timeToMinutes(d.hora_saida)){ toast('A previsão de retorno deve ser posterior ao horário de saída.'); return; }
         if(hasTransportConflict(d,id)){ toast(`Conflito: ${d.veiculo} já possui agendamento nesse intervalo.`); return; }
         const school=state.schools.find(s=>s.id===d.escola_id);
         const payload={...d,escola_id:d.escola_id||null,escola_nome:school?.nome||null};
+        const sharing=findSharingCandidates(payload,id);
         if(id){
-          const existing=state.transport.find(x=>x.id===id); if(!canEditTransport(existing)){ toast('Sem permissão para editar.'); return; }
-          if(!isExecutive()) payload.status='Solicitado';
-          await store.update('transport',id,payload); toast('Agendamento atualizado.');
+          const existing=state.transport.find(x=>x.id===id); if(!canEditTransport(existing)){ toast('Somente a Gerência pode editar.'); return; }
+          await store.update('transport',id,payload); toast(sharing.length?'Agendamento atualizado. Atenção ao possível compartilhamento de transporte.':'Agendamento atualizado.');
         } else {
-          payload.status='Solicitado'; payload.created_by=state.user?.id||null;
-          await store.insert('transport',payload); toast('Solicitação de transporte registrada.');
+          payload.status='Confirmado'; payload.created_by=state.user?.id||null;
+          await store.insert('transport',payload); toast(sharing.length?'Agendamento salvo. Há outra viagem compatível para possível compartilhamento.':'Agendamento salvo.');
         }
-        closeModal(); await loadData(); return;
+        const savedDate=payload.data;
+        closeModal(); await loadData(); openTransportDay(savedDate); return;
       }
       if(form.id==='visitForm'){
         e.preventDefault(); const d=formData(form); const school=state.schools.find(s=>s.id===d.escola_id); await store.insert('visits',{...d,escola_nome:school?.nome||null,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Visita salva no histórico.'); return;
@@ -330,7 +407,7 @@
     if(e.target.id==='logoutBtn'){ await store.signOut(); state.user=null; showLogin(); }
     if(e.target.id==='quickAddHero') $('#quickAdd')?.click();
     if(e.target.id==='quickAdd'){
-      openModal('Novo registro','Ação rápida',`<div class="roles-grid"><button class="btn transport" data-quick="transport">Transporte</button><button class="btn visits" data-quick="visit">Visita</button><button class="btn management" data-quick="management">Acompanhamento</button>${isManager()?'<button class="btn schools" data-quick="school">Escola</button>':''}</div>`);
+      openModal('Novo registro','Ação rápida',`<div class="roles-grid">${canManageTransport()?'<button class="btn transport" data-quick="transport">Transporte</button>':''}<button class="btn visits" data-quick="visit">Visita</button><button class="btn management" data-quick="management">Acompanhamento</button>${isManager()?'<button class="btn schools" data-quick="school">Escola</button>':''}</div>`);
     }
     const quick=e.target.closest('[data-quick]'); if(quick){ const t=quick.dataset.quick; closeModal(); ({transport:openTransportForm,visit:openVisitForm,management:openManagementForm,school:openSchoolForm}[t])(); }
     const calendarDay=e.target.closest('[data-calendar-date]'); if(calendarDay) openTransportDay(calendarDay.dataset.calendarDate);
@@ -338,6 +415,8 @@
     const viewTransport=e.target.closest('[data-view-transport]'); if(viewTransport){ const item=state.transport.find(x=>x.id===viewTransport.dataset.viewTransport); if(item) openTransportItem(item); }
     const editTransport=e.target.closest('[data-edit-transport]'); if(editTransport){ const item=state.transport.find(x=>x.id===editTransport.dataset.editTransport); closeModal(); if(item) openTransportForm(item); }
     const setStatus=e.target.closest('[data-set-transport-status]'); if(setStatus) await updateTransportStatus(setStatus.dataset.setTransportStatus,setStatus.dataset.status);
+    const deleteTransport=e.target.closest('[data-delete-transport]'); if(deleteTransport){ const item=state.transport.find(x=>x.id===deleteTransport.dataset.deleteTransport); if(item) confirmDeleteTransport(item); }
+    const confirmDelete=e.target.closest('[data-confirm-delete-transport]'); if(confirmDelete) await deleteTransportItem(confirmDelete.dataset.confirmDeleteTransport);
     const editProfile=e.target.closest('[data-edit-profile]'); if(editProfile){ const profile=state.profiles.find(p=>p.id===editProfile.dataset.editProfile); if(profile) openProfileForm(profile); }
   });
 
@@ -356,5 +435,11 @@
   $('#transportStatusFilter')?.addEventListener('change',renderTransport);
   $('#visitSearch')?.addEventListener('input',renderVisits);
   $('#userSearch')?.addEventListener('input',renderUsers);
+  document.addEventListener('input', e=>{
+    if(e.target.closest('#transportForm') && ['data','escola_id','destino','hora_saida','previsao_retorno'].includes(e.target.name)) refreshTransportSharingAlert();
+  });
+  document.addEventListener('change', e=>{
+    if(e.target.closest('#transportForm') && ['data','escola_id','destino','hora_saida','previsao_retorno'].includes(e.target.name)) refreshTransportSharingAlert();
+  });
   boot();
 })();

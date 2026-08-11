@@ -184,6 +184,16 @@
     return data;
   }
 
+  async function remove(type, id) {
+    const client = getSupabase();
+    if (!client) throw new Error('Banco Supabase indisponível.');
+    const table = tableMap[type];
+    if (!table) throw new Error('Tipo de dado inválido.');
+    const { error } = await client.from(table).delete().eq('id', id);
+    if (error) throw error;
+    return true;
+  }
+
   async function listProfiles() {
     const client = getSupabase();
     if (!client) throw new Error('Banco Supabase indisponível.');
@@ -235,6 +245,7 @@
     list,
     insert,
     update,
+    remove,
     listProfiles,
     updateProfile,
     listSectors
