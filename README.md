@@ -23,3 +23,12 @@ Execute apenas uma vez no mesmo projeto que já está em uso.
 ## Publicação
 
 Substitua os arquivos do mesmo repositório GitHub já conectado à Vercel. Não crie outro projeto Vercel e não altere `SUPABASE_URL` ou `SUPABASE_PUBLISHABLE_KEY`.
+
+
+## V0.6.2 — correção do salvamento do Transporte
+
+Antes de publicar esta versão:
+1. Execute `supabase/update-v062.sql` no SQL Editor do Supabase.
+2. Depois publique os arquivos desta versão no mesmo repositório GitHub/Vercel.
+3. O banco passa a preencher automaticamente `created_by` com o usuário autenticado.
+4. Caso o banco recuse um agendamento, o Portal agora mostra a mensagem técnica completa em uma janela.

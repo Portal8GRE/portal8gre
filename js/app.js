@@ -366,7 +366,8 @@
           const existing=state.transport.find(x=>x.id===id); if(!canEditTransport(existing)){ toast('Somente a Gerência pode editar.'); return; }
           await store.update('transport',id,payload); toast(sharing.length?'Agendamento atualizado. Atenção ao possível compartilhamento de transporte.':'Agendamento atualizado.');
         } else {
-          payload.status='Confirmado'; payload.created_by=state.user?.id||null;
+          payload.status='Confirmado';
+          delete payload.created_by;
           await store.insert('transport',payload); toast(sharing.length?'Agendamento salvo. Há outra viagem compatível para possível compartilhamento.':'Agendamento salvo.');
         }
         const savedDate=payload.data;
@@ -386,7 +387,24 @@
         if(isSelf && patch.ativo===false){ toast('Você não pode desativar sua própria conta.'); return; }
         await store.updateProfile(d.id,patch); closeModal(); await loadData(); toast('Permissões atualizadas.'); return;
       }
-    }catch(err){ console.error(err); toast(err.message || 'Erro ao salvar.'); }
+    }catch(err){
+      console.error(err);
+      const msg = err?.message || 'Erro ao salvar.';
+      toast(msg);
+      if(form?.id==='transportForm'){
+        openModal(
+          'Não foi possível salvar o agendamento',
+          'Diagnóstico do Transporte',
+          `<div class="delete-confirm">
+            <p>O banco recusou o salvamento.</p>
+            <p class="hint"><strong>Mensagem técnica:</strong><br>${esc(msg)}</p>
+            <div class="modal-actions">
+              <button type="button" data-close class="btn primary">Entendi</button>
+            </div>
+          </div>`
+        );
+      }
+    }
   }
 
   document.addEventListener('click', async e=>{
