@@ -75,3 +75,17 @@ A V0.6.5:
 - não exige nenhuma nova alteração SQL no Supabase.
 
 Basta publicar esta versão no GitHub/Vercel.
+
+
+## V0.7.0 — Gestão → Acompanhamento de Aulas
+
+Inclui módulo integrado ao Portal para importar o PDF “Comparativo de Previsão de Aulas com Aulas Ministradas” do iSEDUC, armazenar o PDF e o histórico no Supabase, consolidar turmas/disciplinas, calcular a previsão proporcional até a data de referência, exibir pendências e permitir vinculação de professor à turma/disciplina.
+
+### Publicação
+1. Execute `supabase/update-v070.sql` no SQL Editor do mesmo Supabase.
+2. Substitua TODOS os arquivos do Portal pelos arquivos da V0.7.0 no mesmo repositório GitHub.
+3. Aguarde o deploy automático da Vercel.
+4. Confirme no rodapé `v0.7.0`.
+5. Entre em Gestão → Acompanhamento de Aulas.
+
+Não é necessário alterar as variáveis da Vercel.

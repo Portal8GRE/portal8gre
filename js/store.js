@@ -243,6 +243,87 @@
     return data || [];
   }
 
+
+
+  async function listClassReports() {
+    const client = getSupabase();
+    if (!client) throw new Error('Banco Supabase indisponível.');
+    const { data, error } = await client.from('relatorios_aulas').select('*').order('data_referencia', { ascending: false }).order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function listClassItems(reportId) {
+    const client = getSupabase();
+    if (!client) throw new Error('Banco Supabase indisponível.');
+    if (!reportId) return [];
+    const { data, error } = await client.from('aulas_relatorio_itens').select('*').eq('relatorio_id', reportId).order('escola_nome').order('turma').order('disciplina');
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function listTeacherMappings() {
+    const client = getSupabase();
+    if (!client) throw new Error('Banco Supabase indisponível.');
+    const { data, error } = await client.from('aulas_professores').select('*').order('professor_nome');
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function saveTeacherMapping(record) {
+    const client = getSupabase();
+    if (!client) throw new Error('Banco Supabase indisponível.');
+    const payload={...record, updated_by:(await client.auth.getUser()).data?.user?.id||null};
+    const { data, error } = await client.from('aulas_professores').upsert(payload,{onConflict:'escola_inep,id_turma,disciplina'}).select().single();
+    if (error) throw error;
+    return data;
+  }
+
+  async function saveClassImport(file, meta, rows) {
+    const client = getSupabase();
+    if (!client) throw new Error('Banco Supabase indisponível.');
+    const user=(await client.auth.getUser()).data?.user;
+    if(!user) throw new Error('Sessão expirada. Entre novamente.');
+    const safe=(file.name||'relatorio.pdf').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9._-]+/g,'_');
+    const path=`${meta.data_referencia}/${Date.now()}_${safe}`;
+    const up=await client.storage.from('relatorios-aulas').upload(path,file,{contentType:'application/pdf',upsert:false});
+    if(up.error) throw up.error;
+    let report=null;
+    try{
+      const rep=await client.from('relatorios_aulas').insert({
+        arquivo_nome:file.name,
+        storage_path:path,
+        data_referencia:meta.data_referencia,
+        total_paginas:meta.total_paginas||0,
+        total_registros:rows.length,
+        total_escolas:meta.total_escolas||0,
+        observacao:meta.observacao||null,
+        uploaded_by:user.id
+      }).select().single();
+      if(rep.error) throw rep.error;
+      report=rep.data;
+      const prepared=rows.map(r=>({...r,relatorio_id:report.id}));
+      for(let i=0;i<prepared.length;i+=400){
+        const chunk=prepared.slice(i,i+400);
+        const ins=await client.from('aulas_relatorio_itens').insert(chunk);
+        if(ins.error) throw ins.error;
+      }
+      return report;
+    }catch(err){
+      await client.storage.from('relatorios-aulas').remove([path]);
+      if(report?.id) await client.from('relatorios_aulas').delete().eq('id',report.id);
+      throw err;
+    }
+  }
+
+  async function getClassReportUrl(path) {
+    const client = getSupabase();
+    if (!client) throw new Error('Banco Supabase indisponível.');
+    const { data, error } = await client.storage.from('relatorios-aulas').createSignedUrl(path, 600);
+    if(error) throw error;
+    return data?.signedUrl || null;
+  }
+
   window.PortalStore = {
     init,
     getConfig,
@@ -262,6 +343,12 @@
     remove,
     listProfiles,
     updateProfile,
-    listSectors
+    listSectors,
+    listClassReports,
+    listClassItems,
+    listTeacherMappings,
+    saveTeacherMapping,
+    saveClassImport,
+    getClassReportUrl
   };
 })();

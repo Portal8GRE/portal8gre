@@ -218,7 +218,7 @@
 
           <article class="sector-card sector-purple">
             <div class="sector-head"><div class="sector-icon">▥</div><h3>Gestão</h3></div>
-            <ul><li>ASURV</li><li>Nutricionista</li><li>Banco de Dados</li></ul>
+            <ul><li>Acompanhamento de Aulas</li><li>ASURV</li><li>Nutricionista</li><li>Banco de Dados</li></ul>
             <button data-go="gestaoSetor" class="sector-btn">Acessar <span>→</span></button>
           </article>
 
@@ -326,12 +326,61 @@
       </section>
 
       <section id="gestaoSetor" class="view">
-        <div class="module-banner purple-banner"><div><p class="eyebrow">Gestão</p><h1>Setor de Gestão</h1><p>Área para ASURV, Nutricionista e Banco de Dados.</p></div></div>
-        <div class="placeholder-grid">
+        <div class="module-banner purple-banner"><div><p class="eyebrow">Gestão</p><h1>Setor de Gestão</h1><p>Acompanhamento de aulas, ASURV, Nutricionista e Banco de Dados.</p></div></div>
+        <div class="placeholder-grid gestao-tools-grid">
+          <article class="placeholder-card aulas-entry-card"><span>📚</span><h3>Acompanhamento de Aulas</h3><p>Previsão × registros do iSEDUC, pendências por escola, turma e disciplina, histórico das atualizações e importação do relatório oficial.</p><button class="btn aulas-btn" type="button" data-go="aulas">Abrir módulo</button></article>
           <article class="placeholder-card"><span>📈</span><h3>ASURV</h3><p>Espaço do setor para acompanhamento de demandas.</p></article>
           <article class="placeholder-card"><span>🍎</span><h3>Nutricionista</h3><p>Área para registros e acompanhamento das escolas.</p></article>
           <article class="placeholder-card"><span>🗄</span><h3>Banco de Dados</h3><p>Consultas e organização das bases da Regional.</p></article>
         </div>
+      </section>
+
+      <section id="aulas" class="view">
+        <div class="module-banner purple-banner aulas-banner">
+          <div><p class="eyebrow">Gestão • iSEDUC</p><h1>Acompanhamento de Aulas</h1><p>Aulas previstas, registradas, aguardando confirmação e pendências até a data de referência do relatório.</p></div>
+          <button id="newAulasReportBtn" class="btn aulas-btn">⬆ Importar relatório iSEDUC</button>
+        </div>
+
+        <div id="aulasUpdateBanner" class="aulas-update-banner"><strong>Nenhum relatório importado.</strong><span>Quando a Coordenação da Gestão importar o PDF, a data de atualização ficará visível para todos os perfis.</span></div>
+
+        <div class="aulas-kpi-grid">
+          <article class="aulas-kpi"><small>Aulas previstas no relatório</small><strong id="aulasKpiTotal">—</strong><span>Carga horária total</span></article>
+          <article class="aulas-kpi"><small>Deveriam estar registradas</small><strong id="aulasKpiExpected">—</strong><span>Até a data de referência</span></article>
+          <article class="aulas-kpi success"><small>Aulas confirmadas</small><strong id="aulasKpiConfirmed">—</strong><span>Registros confirmados no iSEDUC</span></article>
+          <article class="aulas-kpi warning"><small>Aguardando confirmação</small><strong id="aulasKpiAwaiting">—</strong><span>Lançadas, mas ainda pendentes</span></article>
+          <article class="aulas-kpi danger"><small>Sem lançamento estimado</small><strong id="aulasKpiMissing">—</strong><span>Previstas até a data menos lançadas</span></article>
+          <article class="aulas-kpi purple"><small>Cobertura confirmada</small><strong id="aulasKpiRate">—</strong><span>Confirmadas ÷ previstas até a data</span></article>
+        </div>
+
+        <article class="panel aulas-filter-panel">
+          <div class="panel-header wrap"><div><p class="eyebrow">Filtros</p><h3>Detalhamento do acompanhamento</h3></div><button id="clearAulasFilters" class="btn secondary small" type="button">Limpar filtros</button></div>
+          <div class="aulas-filter-grid">
+            <label>Escola<select id="aulasSchoolFilter"><option value="">Todas as escolas</option></select></label>
+            <label>Professor<select id="aulasTeacherFilter"><option value="">Todos os professores</option></select></label>
+            <label>Disciplina<select id="aulasSubjectFilter"><option value="">Todas as disciplinas</option></select></label>
+            <label>Turma<select id="aulasClassFilter"><option value="">Todas as turmas</option></select></label>
+            <label>Período<select id="aulasPeriodFilter"><option value="">Todos os períodos</option><option value="2026/1">2026/1</option><option value="2026/2">2026/2</option></select></label>
+            <label>Busca<input id="aulasSearch" placeholder="Escola, turma ou disciplina" /></label>
+          </div>
+        </article>
+
+        <div class="aulas-summary-grid">
+          <article class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Prioridade</p><h3>Escolas com maior pendência</h3></div></div>
+            <div id="aulasRanking" class="aulas-ranking"><div class="empty-block">Sem dados para classificar.</div></div>
+          </article>
+          <article class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Histórico</p><h3>Atualizações do iSEDUC</h3></div></div>
+            <div id="aulasHistory" class="aulas-history"><div class="empty-block">Nenhuma atualização registrada.</div></div>
+          </article>
+        </div>
+
+        <article class="panel">
+          <div class="panel-header wrap"><div><p class="eyebrow">Registros</p><h3>Turmas e disciplinas</h3></div><div id="aulasResultCount" class="result-count">0 registros</div></div>
+          <div class="table-wrap aulas-table-wrap"><table class="aulas-table"><thead><tr><th>Escola</th><th>Professor</th><th>Turma</th><th>Disciplina</th><th>Previstas</th><th>Previstas até a data</th><th>Confirmadas</th><th>Aguardando</th><th>Sem lançamento</th><th>Cobertura</th><th>Situação</th><th></th></tr></thead><tbody id="aulasTable"></tbody></table></div>
+          <div id="aulasEmpty" class="empty-block">Importe um relatório do iSEDUC para iniciar o acompanhamento.</div>
+          <p class="hint aulas-calc-note">Cálculo de “previstas até a data”: distribuição proporcional da carga horária do período pelos dias úteis do calendário configurado (1º semestre: 19/02 a 11/07; 2º semestre: 30/07 a 22/12). Feriados e particularidades de grade poderão ser refinados posteriormente.</p>
+        </article>
       </section>
 
       <section id="prestacao" class="view">
@@ -384,7 +433,7 @@
     <footer class="portal-footer">
       <span>8ª Gerência Regional de Educação • SEDUC/PI</span>
       <span>Sistema integrado para apoiar a gestão regional.</span>
-      <span>© 2026 Portal 8ª GRE • v0.6.5</span>
+      <span>© 2026 Portal 8ª GRE • v0.7.0</span>
     </footer>
   </div>
 
@@ -395,7 +444,8 @@
     </div>
   </dialog>
 
-  <script src="js/store.js?v=0.6.5"></script>
-  <script src="js/app.js?v=0.6.5"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="js/store.js?v=0.7.0"></script>
+  <script src="js/app.js?v=0.7.0"></script>
 </body>
 </html>

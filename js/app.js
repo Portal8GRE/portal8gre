@@ -2,9 +2,9 @@
   const $ = s => document.querySelector(s);
   const $$ = s => [...document.querySelectorAll(s)];
   const store = window.PortalStore;
-  const state = { user: null, schools: [], transport: [], visits: [], management: [], profiles: [], sectors: [] };
+  const state = { user: null, schools: [], transport: [], visits: [], management: [], profiles: [], sectors: [], classReports: [], classItems: [], teacherMappings: [], activeClassReportId: null, aulasModuleReady: true };
   const roleLabels = { admin:'Administrador', gerencia:'Gerência Regional', coordenacao:'Coordenação', tecnico:'Técnico da GRE', escola:'Escola' };
-  const titles = { dashboard:'Apresentação', transporte:'Gerência Regional • Transporte', visitas:'Ensino e Aprendizagem • Visitas', gestao:'Gestão e Inspeção • Acompanhamento Escolar', administracao:'Administração', gestaoSetor:'Gestão', prestacao:'Prestação de Contas', escolas:'Escolas', usuarios:'Usuários e Permissões', configuracoes:'Configurações' };
+  const titles = { dashboard:'Apresentação', transporte:'Gerência Regional • Transporte', visitas:'Ensino e Aprendizagem • Visitas', gestao:'Gestão e Inspeção • Acompanhamento Escolar', administracao:'Administração', gestaoSetor:'Gestão', prestacao:'Prestação de Contas', escolas:'Escolas', usuarios:'Usuários e Permissões', configuracoes:'Configurações', aulas:'Gestão • Acompanhamento de Aulas' };
   let transportCalendarDate = new Date();
   const transportMonthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
@@ -25,16 +25,24 @@
   function canManageTransport(){ return ['admin','gerencia'].includes(state.user?.role); }
   function canEditTransport(){ return canManageTransport(); }
   function canChangeTransportStatus(){ return canManageTransport(); }
+  function canManageAulas(){ return ['admin','gerencia','coordenacao'].includes(state.user?.role); }
 
   async function loadData(){
     try {
       const [schools, transport, visits, management] = await Promise.all(['schools','transport','visits','management'].map(store.list));
       Object.assign(state,{schools,transport,visits,management});
-      if (isExecutive()) {
-        const [profiles, sectors] = await Promise.all([store.listProfiles(), store.listSectors()]);
-        Object.assign(state,{profiles,sectors});
-      } else {
-        state.profiles=[]; state.sectors=[];
+      if (isExecutive()) state.profiles=await store.listProfiles(); else state.profiles=[];
+      if (isManager()) state.sectors=await store.listSectors(); else state.sectors=[];
+      try{
+        state.classReports=await store.listClassReports();
+        state.teacherMappings=await store.listTeacherMappings();
+        if(!state.activeClassReportId && state.classReports.length) state.activeClassReportId=state.classReports[0].id;
+        if(state.activeClassReportId && !state.classReports.some(r=>r.id===state.activeClassReportId)) state.activeClassReportId=state.classReports[0]?.id||null;
+        state.classItems=state.activeClassReportId ? await store.listClassItems(state.activeClassReportId) : [];
+        state.aulasModuleReady=true;
+      }catch(aulasErr){
+        console.warn('Módulo de aulas ainda não inicializado:', aulasErr);
+        state.classReports=[]; state.classItems=[]; state.teacherMappings=[]; state.activeClassReportId=null; state.aulasModuleReady=false;
       }
       renderAll();
     } catch(err){
@@ -52,6 +60,7 @@
     $$('.admin-only').forEach(el => el.classList.toggle('hidden', !isExecutive()));
     const schoolBtn=$('#newSchoolBtn'); if(schoolBtn) schoolBtn.classList.toggle('hidden', !isManager());
     const transportBtn=$('#newTransportBtn'); if(transportBtn) transportBtn.classList.toggle('hidden', !canManageTransport());
+    const aulasBtn=$('#newAulasReportBtn'); if(aulasBtn) aulasBtn.classList.toggle('hidden', !canManageAulas());
     setText('#storageBadge','Banco online');
     const badge=$('#storageBadge'); if(badge) badge.className='badge online';
     setText('#dbStatusText','O sistema está conectado ao Supabase e os dados são gravados no banco online.');
@@ -102,7 +111,7 @@
     $('.sidebar')?.classList.remove('open');
   }
 
-  function renderAll(){ renderStats(); renderDashboardLists(); renderSchools(); renderTransport(); renderVisits(); renderManagement(); renderUsers(); }
+  function renderAll(){ renderStats(); renderDashboardLists(); renderSchools(); renderTransport(); renderVisits(); renderManagement(); renderUsers(); renderAulas(); }
   function renderStats(){
     setText('#statTransport', state.transport.filter(x=>x.status!=='Cancelado').length);
     setText('#statVisits', state.visits.length);
@@ -121,6 +130,137 @@
   function sectorName(id){ return state.sectors.find(s=>s.id===id)?.nome || '—'; }
   function schoolOptions(selected=''){ return `<option value="">Selecione</option>` + state.schools.filter(s=>s.ativo!==false).map(s=>`<option value="${esc(s.id)}" ${s.id===selected?'selected':''}>${esc(s.nome)} — ${esc(s.municipio||'')}</option>`).join(''); }
   function sectorOptions(selected=''){ return `<option value="">Sem setor vinculado</option>` + state.sectors.map(s=>`<option value="${esc(s.id)}" ${s.id===selected?'selected':''}>${esc(s.nome)}</option>`).join(''); }
+
+
+  const AULAS_CALENDAR = {
+    '2026/1':{start:'2026-02-19',end:'2026-07-11'},
+    '2026/2':{start:'2026-07-30',end:'2026-12-22'}
+  };
+  let pendingAulasImport=null;
+
+  function localDate(v){ const [y,m,d]=String(v).slice(0,10).split('-').map(Number); return new Date(y,m-1,d,12,0,0); }
+  function countWeekdays(start,end){
+    let a=localDate(start), b=localDate(end), n=0;
+    for(let d=new Date(a); d<=b; d.setDate(d.getDate()+1)){ const w=d.getDay(); if(w!==0&&w!==6) n++; }
+    return n;
+  }
+  function expectedAulas(row,refDate){
+    const cfg=AULAS_CALENDAR[row.periodo]; const total=Number(row.carga_horaria_total||0); if(!cfg||!refDate) return 0;
+    const ref=String(refDate).slice(0,10); if(ref<cfg.start) return 0; if(ref>=cfg.end) return Math.round(total);
+    const all=countWeekdays(cfg.start,cfg.end), elapsed=countWeekdays(cfg.start,ref);
+    return all ? Math.round(total*(elapsed/all)) : 0;
+  }
+  function currentAulasReport(){ return state.classReports.find(r=>r.id===state.activeClassReportId)||null; }
+  function teacherForRow(row){
+    const map=state.teacherMappings.find(m=>String(m.escola_inep||'')===String(row.escola_inep||'') && String(m.id_turma||'')===String(row.id_turma||'') && String(m.disciplina||'').trim().toLocaleLowerCase('pt-BR')===String(row.disciplina||'').trim().toLocaleLowerCase('pt-BR'));
+    return map?.professor_nome||'';
+  }
+  function aulasRowMetrics(row,refDate){
+    const expected=expectedAulas(row,refDate), conf=Number(row.aulas_confirmadas||0), awaiting=Number(row.aulas_aguardando_confirmacao||0);
+    const missing=Math.max(expected-conf-awaiting,0), regularize=Math.max(expected-conf,0), rate=expected?Math.min(100,(conf/expected)*100):(conf>0?100:0);
+    return {expected,conf,awaiting,missing,regularize,rate};
+  }
+  function aulasStatus(rate){ return rate>=95?['Em dia','ok']:rate>=85?['Atenção','warn']:['Crítico','crit']; }
+  function populateSelect(el,values,placeholder){ if(!el) return; const cur=el.value; el.innerHTML=`<option value="">${placeholder}</option>`+[...new Set(values.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR')).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join(''); if([...el.options].some(o=>o.value===cur)) el.value=cur; }
+  function filteredAulasRows(){
+    const school=$('#aulasSchoolFilter')?.value||'', teacher=$('#aulasTeacherFilter')?.value||'', subject=$('#aulasSubjectFilter')?.value||'', turma=$('#aulasClassFilter')?.value||'', period=$('#aulasPeriodFilter')?.value||'', q=($('#aulasSearch')?.value||'').trim().toLocaleLowerCase('pt-BR');
+    return state.classItems.filter(r=>{
+      const prof=teacherForRow(r)||'Não vinculado';
+      if(school&&r.escola_nome!==school) return false; if(teacher&&prof!==teacher) return false; if(subject&&r.disciplina!==subject) return false; if(turma&&r.turma!==turma) return false; if(period&&r.periodo!==period) return false;
+      if(q && ![r.escola_nome,r.municipio,r.turma,r.disciplina,prof].some(v=>String(v||'').toLocaleLowerCase('pt-BR').includes(q))) return false;
+      return true;
+    });
+  }
+  function renderAulas(){
+    const table=$('#aulasTable'); if(!table) return;
+    const importBtn=$('#newAulasReportBtn'); if(importBtn) importBtn.classList.toggle('hidden',!canManageAulas());
+    if(!state.aulasModuleReady){
+      $('#aulasUpdateBanner').innerHTML='<strong>Atualização necessária no Supabase.</strong><span>Execute o arquivo supabase/update-v070.sql antes de usar este módulo.</span>';
+      table.innerHTML=''; $('#aulasEmpty')?.classList.remove('hidden'); return;
+    }
+    const report=currentAulasReport();
+    if(report){
+      $('#aulasUpdateBanner').innerHTML=`<strong>Última atualização: ${esc(fmtDate(report.data_referencia))}</strong><span>Importado em ${esc(new Date(report.created_at).toLocaleString('pt-BR'))} • ${esc(report.arquivo_nome)} • ${Number(report.total_registros||0).toLocaleString('pt-BR')} registros</span>`;
+    }else $('#aulasUpdateBanner').innerHTML='<strong>Nenhum relatório importado.</strong><span>A Coordenação da Gestão pode importar o PDF “Comparativo de Previsão de Aulas com Aulas Ministradas”.</span>';
+
+    populateSelect($('#aulasSchoolFilter'),state.classItems.map(r=>r.escola_nome),'Todas as escolas');
+    populateSelect($('#aulasTeacherFilter'),state.classItems.map(r=>teacherForRow(r)||'Não vinculado'),'Todos os professores');
+    populateSelect($('#aulasSubjectFilter'),state.classItems.map(r=>r.disciplina),'Todas as disciplinas');
+    populateSelect($('#aulasClassFilter'),state.classItems.map(r=>r.turma),'Todas as turmas');
+
+    const rows=filteredAulasRows(), ref=report?.data_referencia;
+    const totals=rows.reduce((a,r)=>{ const m=aulasRowMetrics(r,ref); a.total+=Number(r.carga_horaria_total||0); a.expected+=m.expected; a.conf+=m.conf; a.awaiting+=m.awaiting; a.missing+=m.missing; return a; },{total:0,expected:0,conf:0,awaiting:0,missing:0});
+    setText('#aulasKpiTotal',Math.round(totals.total).toLocaleString('pt-BR')); setText('#aulasKpiExpected',totals.expected.toLocaleString('pt-BR')); setText('#aulasKpiConfirmed',totals.conf.toLocaleString('pt-BR')); setText('#aulasKpiAwaiting',totals.awaiting.toLocaleString('pt-BR')); setText('#aulasKpiMissing',totals.missing.toLocaleString('pt-BR')); setText('#aulasKpiRate',totals.expected?`${(totals.conf/totals.expected*100).toFixed(1).replace('.',',')}%`:'—');
+    setText('#aulasResultCount',`${rows.length.toLocaleString('pt-BR')} registros`);
+    $('#aulasEmpty')?.classList.toggle('hidden',rows.length>0);
+    table.innerHTML=rows.slice(0,1500).map(r=>{ const m=aulasRowMetrics(r,ref), [lab,cls]=aulasStatus(m.rate), prof=teacherForRow(r); return `<tr><td class="school-cell"><strong>${esc(r.escola_nome||'—')}</strong><small class="muted">${esc(r.municipio||'')}</small></td><td><div class="aulas-professor"><span class="${prof?'':'teacher-unset'}">${esc(prof||'Não vinculado')}</span></div></td><td>${esc(r.turma||'—')}</td><td class="subject-cell">${esc(r.disciplina||'—')}</td><td>${Math.round(Number(r.carga_horaria_total||0))}</td><td><strong>${m.expected}</strong></td><td>${m.conf}</td><td>${m.awaiting}</td><td>${m.missing}</td><td><strong>${m.rate.toFixed(1).replace('.',',')}%</strong></td><td><span class="aulas-status ${cls}">${lab}</span></td><td>${canManageAulas()?`<button class="action-btn" type="button" data-map-aulas-prof="${esc(r.id)}" title="Vincular professor">👤</button>`:''}</td></tr>`; }).join('');
+    renderAulasRanking(rows,ref); renderAulasHistory();
+  }
+  function renderAulasRanking(rows,ref){
+    const el=$('#aulasRanking'); if(!el) return; const map={}; rows.forEach(r=>{ const k=r.escola_nome||'Escola'; const m=aulasRowMetrics(r,ref); if(!map[k])map[k]={e:k,expected:0,conf:0}; map[k].expected+=m.expected; map[k].conf+=m.conf; });
+    const list=Object.values(map).map(x=>({...x,rate:x.expected?x.conf/x.expected*100:0})).sort((a,b)=>a.rate-b.rate).slice(0,8); el.innerHTML=list.length?list.map(x=>`<div class="ranking-row"><strong>${esc(x.e)}</strong><div class="ranking-bar"><i style="width:${Math.max(2,Math.min(100,x.rate))}%"></i></div><span>${x.rate.toFixed(1).replace('.',',')}%</span></div>`).join(''):'<div class="empty-block">Sem dados para classificar.</div>';
+  }
+  function renderAulasHistory(){
+    const el=$('#aulasHistory'); if(!el) return; el.innerHTML=state.classReports.length?state.classReports.slice(0,8).map(r=>`<div class="history-row ${r.id===state.activeClassReportId?'active':''}"><div><strong>Dados até ${esc(fmtDate(r.data_referencia))}</strong><small>${esc(r.arquivo_nome)} • ${Number(r.total_registros||0).toLocaleString('pt-BR')} registros</small></div><div class="history-actions"><button class="btn secondary small" type="button" data-view-aulas-report="${esc(r.id)}">Ver</button><button class="pdf-link" type="button" data-open-aulas-pdf="${esc(r.id)}">PDF</button></div></div>`).join(''):'<div class="empty-block">Nenhuma atualização registrada.</div>';
+  }
+
+  function openAulasImportForm(){
+    if(!canManageAulas()){ toast('Somente Gerência/Coordenação podem importar o relatório.'); return; }
+    openModal('Importar relatório do iSEDUC','Gestão • Acompanhamento de Aulas',`<form id="aulasImportForm" class="form-grid" onsubmit="return false;"><label class="full">PDF — Comparativo de Previsão de Aulas com Aulas Ministradas<input id="aulasPdfFile" type="file" accept="application/pdf,.pdf" required></label><label>Data de referência dos dados<input id="aulasReferenceDate" type="date" value="${new Date().toISOString().slice(0,10)}" required></label><label>Observação<input id="aulasObservation" placeholder="Ex.: Relatório semanal da Gestão"></label><div class="full"><div class="calendar-pill">Calendário: 19/02–11/07 • retorno 30/07 • término 22/12</div></div><div id="aulasParseStatus" class="full hint">O PDF será lido no próprio navegador. Antes de gravar, o sistema mostrará uma prévia dos registros reconhecidos.</div><div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button id="analyzeAulasPdfBtn" type="button" class="btn aulas-btn">Analisar PDF</button></div></form>`);
+  }
+  function groupPdfLines(items){
+    const groups=[]; const sorted=[...items].filter(i=>String(i.str||'').trim()).sort((a,b)=>b.transform[5]-a.transform[5] || a.transform[4]-b.transform[4]);
+    for(const item of sorted){ const y=item.transform[5]; let g=groups.find(x=>Math.abs(x.y-y)<2.2); if(!g){g={y,items:[]};groups.push(g)} g.items.push(item); }
+    return groups.sort((a,b)=>b.y-a.y).map(g=>({y:g.y,items:g.items.sort((a,b)=>a.transform[4]-b.transform[4])}));
+  }
+  function numPt(v){ const n=Number(String(v||'').replace(',','.').replace(/[^0-9.-]/g,'')); return Number.isFinite(n)?n:0; }
+  async function parseAulasPdf(file,onProgress){
+    if(!window.pdfjsLib) throw new Error('Leitor de PDF não carregado. Atualize a página e tente novamente.');
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const pdf=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise; const rows=[], warnings=[]; let periodo='',municipio='',escolaInep='',escolaNome='',pendingDiscipline=''; const schools=new Set();
+    for(let p=1;p<=pdf.numPages;p++){
+      const page=await pdf.getPage(p), vp=page.getViewport({scale:1}), tc=await page.getTextContent(), lines=groupPdfLines(tc.items), w=vp.width;
+      for(const line of lines){
+        const full=line.items.map(i=>String(i.str||'').trim()).filter(Boolean).join(' ').replace(/\s+/g,' ').trim(); if(!full)continue;
+        let m=full.match(/ANO LETIVO:\s*(\d{4}\/\d)/i); if(m){periodo=m[1];pendingDiscipline='';continue}
+        m=full.match(/MUNICIPIO:\s*(.+)$/i); if(m){municipio=m[1].trim();continue}
+        m=full.match(/ESCOLA:\s*(\d{8})\s*-\s*(.+)$/i); if(m){escolaInep=m[1];escolaNome=m[2].trim();schools.add(escolaInep);pendingDiscipline='';continue}
+        if(/COMPARATIVO DE PREVISÃO|DISCIPLINA|CARGA HORÁRIA|IDTURMA|DESENVOLVIDO PELA|PÁGINA \d+/i.test(full)) continue;
+        const cols=[[],[],[],[],[],[],[],[]];
+        for(const it of line.items){ const x=(it.transform[4]+(it.width||0)/2)/w, s=String(it.str||'').trim(); if(!s)continue; let c=x<.105?0:x<.315?1:x<.585?2:x<.68?3:x<.785?4:x<.875?5:x<.955?6:7; cols[c].push(s); }
+        const id=cols[0].join('').match(/\b\d{6}\b/)?.[0] || '';
+        if(!id){ const disc=cols[2].join(' ').trim(); if(disc && !/DISCIPLINA|CONFIRMA/i.test(disc)) pendingDiscipline=(pendingDiscipline+' '+disc).trim(); continue; }
+        const turma=cols[1].join(' ').trim(), disc=((pendingDiscipline+' '+cols[2].join(' ')).replace(/\s+/g,' ').trim()); pendingDiscipline='';
+        let carga=numPt(cols[3].join(' ')), chconf=numPt(cols[4].join(' ')), aconfirm=Math.round(numPt(cols[5].join(' '))), aguH=numPt(cols[6].join(' ')), agu=Math.round(numPt(cols[7].join(' ')));
+        if(!carga){ const tail=full.match(/(\d+(?:[.,]\d+)?)\s+(\d+(?:[.,]\d+)?)\s+(\d+)\s+(\d+(?:[.,]\d+)?)\s+(\d+)\s*$/); if(tail){carga=numPt(tail[1]);chconf=numPt(tail[2]);aconfirm=Number(tail[3]);aguH=numPt(tail[4]);agu=Number(tail[5]);} }
+        if(!periodo||!escolaNome||!turma||!disc||!carga){ warnings.push(`Página ${p}: linha não reconhecida completamente (${id||'sem ID'}).`); continue; }
+        rows.push({periodo,municipio,escola_inep:escolaInep,escola_nome:escolaNome,id_turma:id,turma,disciplina:disc,carga_horaria_total:carga,carga_horaria_confirmada:chconf,aulas_confirmadas:aconfirm,aguardando_confirmacao_h:aguH,aulas_aguardando_confirmacao:agu});
+      }
+      onProgress?.(p,pdf.numPages);
+    }
+    return {rows,pages:pdf.numPages,schools:schools.size,warnings};
+  }
+  async function analyzeAulasPdf(){
+    const file=$('#aulasPdfFile')?.files?.[0], ref=$('#aulasReferenceDate')?.value, obs=$('#aulasObservation')?.value||''; if(!file){toast('Selecione o PDF.');return} if(!ref){toast('Informe a data de referência.');return}
+    const btn=$('#analyzeAulasPdfBtn'), status=$('#aulasParseStatus'); if(btn){btn.disabled=true;btn.textContent='Lendo PDF...'};
+    try{
+      const parsed=await parseAulasPdf(file,(p,total)=>{ if(status)status.innerHTML=`Lendo página <strong>${p}</strong> de <strong>${total}</strong>...`; });
+      if(parsed.rows.length<1) throw new Error('Nenhuma linha do relatório foi reconhecida. Confirme se este é o PDF “Comparativo de Previsão de Aulas com Aulas Ministradas”.');
+      const schoolMap=new Map(state.schools.map(s=>[String(s.inep||'').replace(/\D/g,''),s.id])); parsed.rows=parsed.rows.map(r=>({...r,escola_id:schoolMap.get(String(r.escola_inep||'').replace(/\D/g,''))||null}));
+      pendingAulasImport={file,meta:{data_referencia:ref,total_paginas:parsed.pages,total_escolas:parsed.schools,observacao:obs},rows:parsed.rows,warnings:parsed.warnings};
+      openAulasImportPreview();
+    }catch(err){console.error(err);toast(err.message||'Erro ao analisar PDF.'); if(status)status.textContent=err.message||'Erro ao analisar PDF.';}
+    finally{if(btn){btn.disabled=false;btn.textContent='Analisar PDF'}}
+  }
+  function openAulasImportPreview(){
+    const p=pendingAulasImport; if(!p)return; const sample=p.rows.slice(0,12); openModal('Prévia da importação','Gestão • iSEDUC',`<div class="import-preview-stats"><div><small>Páginas</small><strong>${p.meta.total_paginas}</strong></div><div><small>Registros reconhecidos</small><strong>${p.rows.length.toLocaleString('pt-BR')}</strong></div><div><small>Escolas</small><strong>${p.meta.total_escolas}</strong></div><div><small>Dados até</small><strong>${fmtDate(p.meta.data_referencia)}</strong></div></div>${p.warnings.length?`<div class="import-warnings"><strong>Atenção:</strong> ${p.warnings.length} linha(s) não foram reconhecidas automaticamente. A importação gravará apenas as linhas validadas.</div>`:''}<div class="import-preview-table"><table><thead><tr><th>Escola</th><th>Período</th><th>Turma</th><th>Disciplina</th><th>CH total</th><th>Aulas confirmadas</th><th>Aguardando</th></tr></thead><tbody>${sample.map(r=>`<tr><td>${esc(r.escola_nome)}</td><td>${esc(r.periodo)}</td><td>${esc(r.turma)}</td><td>${esc(r.disciplina)}</td><td>${r.carga_horaria_total}</td><td>${r.aulas_confirmadas}</td><td>${r.aulas_aguardando_confirmacao}</td></tr>`).join('')}</tbody></table></div><p class="hint">Arquivo: ${esc(p.file.name)}. O PDF original será armazenado no Supabase junto com este histórico.</p><div class="modal-actions"><button type="button" data-close class="btn secondary">Cancelar</button><button type="button" id="confirmAulasImportBtn" class="btn aulas-btn">Confirmar e salvar</button></div>`);
+  }
+  async function confirmAulasImport(){
+    if(!pendingAulasImport)return; const btn=$('#confirmAulasImportBtn'); if(btn){btn.disabled=true;btn.textContent='Salvando...'}
+    try{ const rep=await store.saveClassImport(pendingAulasImport.file,pendingAulasImport.meta,pendingAulasImport.rows); state.activeClassReportId=rep.id; pendingAulasImport=null; closeModal(); await loadData(); navigate('aulas'); toast('Relatório importado e salvo no histórico.'); }
+    catch(err){console.error(err);toast(err.message||'Erro ao salvar relatório.'); if(btn){btn.disabled=false;btn.textContent='Confirmar e salvar'}}
+  }
+  function openTeacherMapping(row){ const current=teacherForRow(row); openModal('Vincular professor','Gestão • Acompanhamento de Aulas',`<form id="teacherMappingForm" class="form-grid"><input type="hidden" name="escola_inep" value="${esc(row.escola_inep||'')}"><input type="hidden" name="id_turma" value="${esc(row.id_turma||'')}"><input type="hidden" name="disciplina" value="${esc(row.disciplina||'')}"><div class="teacher-form-context full"><strong>${esc(row.escola_nome)}</strong><br>${esc(row.turma)} • ${esc(row.disciplina)}</div><label class="full">Professor(a)<input name="professor_nome" value="${esc(current)}" placeholder="Nome completo do professor" required></label><div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button class="btn aulas-btn">Salvar vínculo</button></div></form>`); }
 
   function renderSchools(){
     const table=$('#schoolTable'), empty=$('#schoolsEmpty'); if(!table||!empty) return;
@@ -473,6 +613,9 @@
       if(form.id==='managementForm'){
         e.preventDefault(); const d=formData(form); const school=state.schools.find(s=>s.id===d.escola_id); await store.insert('management',{...d,escola_nome:school?.nome||null,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Acompanhamento salvo.'); return;
       }
+      if(form.id==='teacherMappingForm'){
+        e.preventDefault(); if(!canManageAulas()){toast('Sem permissão.');return;} const d=formData(form); await store.saveTeacherMapping(d); closeModal(); state.teacherMappings=await store.listTeacherMappings(); renderAulas(); toast('Professor vinculado à turma/disciplina.'); return;
+      }
       if(form.id==='profileForm'){
         e.preventDefault(); if(!isExecutive()){ toast('Sem permissão.'); return; }
         const d=formData(form); const profile=state.profiles.find(p=>p.id===d.id); if(!profile) return;
@@ -508,6 +651,14 @@
       await saveTransportForm();
       return;
     }
+    if(e.target.id==='newAulasReportBtn') openAulasImportForm();
+    if(e.target.id==='analyzeAulasPdfBtn') await analyzeAulasPdf();
+    if(e.target.id==='confirmAulasImportBtn') await confirmAulasImport();
+    if(e.target.id==='clearAulasFilters'){ ['aulasSchoolFilter','aulasTeacherFilter','aulasSubjectFilter','aulasClassFilter','aulasPeriodFilter','aulasSearch'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';}); renderAulas(); }
+    const viewAulasReport=e.target.closest('[data-view-aulas-report]'); if(viewAulasReport){ state.activeClassReportId=viewAulasReport.dataset.viewAulasReport; try{state.classItems=await store.listClassItems(state.activeClassReportId); renderAulas();}catch(err){toast(err.message||'Erro ao abrir histórico.');} }
+    const openAulasPdf=e.target.closest('[data-open-aulas-pdf]'); if(openAulasPdf){ const rep=state.classReports.find(r=>r.id===openAulasPdf.dataset.openAulasPdf); if(rep){try{const url=await store.getClassReportUrl(rep.storage_path); if(url)window.open(url,'_blank','noopener');}catch(err){toast(err.message||'Não foi possível abrir o PDF.');}} }
+    const mapProf=e.target.closest('[data-map-aulas-prof]'); if(mapProf){ const row=state.classItems.find(r=>r.id===mapProf.dataset.mapAulasProf); if(row)openTeacherMapping(row); }
+
     const nav=e.target.closest('[data-view]'); if(nav) navigate(nav.dataset.view);
     const go=e.target.closest('[data-go]'); if(go) navigate(go.dataset.go);
     if(e.target.id==='menuToggle') $('.sidebar')?.classList.toggle('open');
@@ -553,6 +704,8 @@
   $('#transportStatusFilter')?.addEventListener('change',renderTransport);
   $('#visitSearch')?.addEventListener('input',renderVisits);
   $('#userSearch')?.addEventListener('input',renderUsers);
+  ['aulasSchoolFilter','aulasTeacherFilter','aulasSubjectFilter','aulasClassFilter','aulasPeriodFilter'].forEach(id=>document.getElementById(id)?.addEventListener('change',renderAulas));
+  $('#aulasSearch')?.addEventListener('input',renderAulas);
   document.addEventListener('input', e=>{
     if(e.target.closest('#transportForm') && ['data','escola_id','destino','hora_saida','previsao_retorno'].includes(e.target.name)) refreshTransportSharingAlert();
   });
