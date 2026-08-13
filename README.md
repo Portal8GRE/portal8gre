@@ -89,3 +89,17 @@ Inclui módulo integrado ao Portal para importar o PDF “Comparativo de Previs�
 5. Entre em Gestão → Acompanhamento de Aulas.
 
 Não é necessário alterar as variáveis da Vercel.
+
+
+## V0.7.1 — Acompanhamento de Aulas revisado
+- Acompanhamento de Aulas movido para **Gestão e Inspeção**.
+- Professor removido.
+- Novo filtro de modalidade: **EJA, Ensino Fundamental, Ensino Médio e Outros**.
+- Ao selecionar uma escola, Disciplina e Turma exibem somente opções daquela escola; Modalidade também é limitada à escola.
+- Ordenação: menor/maior % de registro, mais sem lançamento, mais aguardando, escola A–Z e disciplina A–Z.
+- Ranking de escolas com opção menor/maior registro.
+- Leitor PDF refeito para registros multilinha, especialmente EJA, turmas externas e disciplinas extensas.
+- Antes de salvar, o sistema compara registros detectados no PDF com registros reconhecidos. Se a leitura ficar abaixo de 99,5%, a importação é bloqueada.
+- A quantidade de aulas previstas é inferida da carga horária e da duração média real das aulas da turma, importante para aulas de 45, 50 ou 60 minutos.
+- Se `update-v070.sql` já foi executado com Success, não há SQL novo.
+- Reimporte o PDF após publicar esta versão; relatórios antigos incompletos permanecem apenas no histórico.

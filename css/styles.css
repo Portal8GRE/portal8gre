@@ -99,3 +99,27 @@ button:disabled{
 @media(max-width:1280px){.aulas-kpi-grid{grid-template-columns:repeat(3,1fr)}.aulas-filter-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:900px){.aulas-summary-grid{grid-template-columns:1fr}.gestao-tools-grid .aulas-entry-card{grid-column:1/-1}.aulas-update-banner{align-items:flex-start;flex-direction:column}.aulas-update-banner span{text-align:left}}
 @media(max-width:650px){.aulas-kpi-grid,.aulas-filter-grid,.import-preview-stats{grid-template-columns:1fr}.ranking-row{grid-template-columns:1fr}.ranking-row span{text-align:left}}
+
+/* v0.7.1 */
+.gestao-inspecao-shortcuts{display:grid;grid-template-columns:minmax(300px,520px);gap:14px;margin-bottom:16px}
+.teal-aulas-entry{background:linear-gradient(135deg,#edfafa,#fff);border-color:#cfe8e8}
+.teal-aulas-entry .btn{margin-top:14px}
+.aulas-banner{background:linear-gradient(125deg,#f1fbfb,#f8ffff)}
+.aulas-btn{background:#087f82;color:#fff}.aulas-btn:hover{background:#066a6d}
+.aulas-update-banner{border-left-color:#087f82;background:#eef9f9;border-color:#cce8e8}
+.aulas-update-banner strong{color:#075f61}
+.aulas-kpi.purple{border-top-color:#087f82}
+.aulas-filter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.aulas-search-label{grid-column:span 2}
+.modality-pill{display:inline-flex;padding:5px 8px;border-radius:999px;background:#eaf6f6;color:#17696b;font-size:.68rem;font-weight:800;white-space:nowrap}
+.compact-select{border:1px solid var(--border);border-radius:8px;background:#fff;padding:7px 9px;color:#465461;font-size:.75rem;font-weight:700}
+.import-preview-stats-5{grid-template-columns:repeat(5,1fr)}
+.import-success{background:#eaf7ef;border:1px solid #badfc8;border-radius:10px;padding:11px;margin:10px 0;color:#246943;font-size:.78rem}
+.critical-import{background:#fdeeed;border-color:#efc0bc;color:#8c322c}
+.aulas-table{min-width:1380px}
+.aulas-table .school-cell{min-width:230px}
+.aulas-table .subject-cell{min-width:230px}
+.ranking-bar i{background:#087f82}
+.pdf-link{color:#087f82}
+@media(max-width:1280px){.aulas-filter-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.import-preview-stats-5{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:800px){.aulas-filter-grid,.import-preview-stats-5{grid-template-columns:1fr}.aulas-search-label{grid-column:auto}}
