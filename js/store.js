@@ -257,9 +257,40 @@
     const client = getSupabase();
     if (!client) throw new Error('Banco Supabase indisponível.');
     if (!reportId) return [];
-    const { data, error } = await client.from('aulas_relatorio_itens').select('*').eq('relatorio_id', reportId).order('escola_nome').order('turma').order('disciplina');
-    if (error) throw error;
-    return data || [];
+
+    // O Supabase limita a quantidade de linhas retornadas por requisição.
+    // Como o relatório do iSEDUC possui milhares de registros, buscamos
+    // todas as páginas do resultado até terminar.
+    const pageSize = 1000;
+    let from = 0;
+    const all = [];
+
+    while (true) {
+      const { data, error } = await client
+        .from('aulas_relatorio_itens')
+        .select('*')
+        .eq('relatorio_id', reportId)
+        .order('escola_nome', { ascending: true })
+        .order('turma', { ascending: true })
+        .order('disciplina', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, from + pageSize - 1);
+
+      if (error) throw error;
+
+      const page = data || [];
+      all.push(...page);
+
+      if (page.length < pageSize) break;
+      from += pageSize;
+
+      // Proteção contra loop indevido em caso de resposta anômala.
+      if (from > 50000) {
+        throw new Error('O relatório possui mais registros que o limite de segurança do Portal.');
+      }
+    }
+
+    return all;
   }
 
   async function listTeacherMappings() {

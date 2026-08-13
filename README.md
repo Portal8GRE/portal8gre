@@ -103,3 +103,23 @@ Não é necessário alterar as variáveis da Vercel.
 - A quantidade de aulas previstas é inferida da carga horária e da duração média real das aulas da turma, importante para aulas de 45, 50 ou 60 minutos.
 - Se `update-v070.sql` já foi executado com Success, não há SQL novo.
 - Reimporte o PDF após publicar esta versão; relatórios antigos incompletos permanecem apenas no histórico.
+
+
+## V0.7.2 — correção das escolas que não apareciam
+
+Causa identificada:
+- o PDF pode gerar milhares de linhas em `aulas_relatorio_itens`;
+- o Portal fazia apenas uma consulta `select()` ao Supabase;
+- por padrão, uma consulta retorna no máximo uma quantidade limitada de linhas;
+- assim, somente o primeiro bloco de registros era carregado e as escolas que
+  apareciam depois desse bloco não entravam nos filtros/painel, mesmo estando
+  salvas no banco.
+
+Correção:
+- `listClassItems()` agora busca o relatório em páginas de 1.000 registros;
+- todas as páginas são concatenadas antes de montar escolas, modalidades,
+  disciplinas, turmas, ranking e indicadores;
+- o cabeçalho do módulo mostra `carregados de total` para permitir conferência.
+
+Não há SQL novo nesta versão.
+Não é necessário reimportar o PDF se a importação anterior foi salva com sucesso.
