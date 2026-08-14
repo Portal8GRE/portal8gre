@@ -618,7 +618,7 @@
   function openProfileForm(profile){
     if(!isExecutive()) return;
     const self=profile.id===state.user?.id;
-    openModal('Editar usuário','Usuários e permissões',`<form id="profileForm" class="form-grid"><input type="hidden" name="id" value="${esc(profile.id)}"><label class="full">Nome<input name="nome" value="${esc(profile.nome||'')}" required></label><label class="full">E-mail<input value="${esc(profile.email||'')}" disabled></label><label>Perfil${self?`<input type="hidden" name="role" value="${esc(profile.role)}">`:''}<select name="role" ${self?'disabled':''}><option value="admin" ${profile.role==='admin'?'selected':''}>Administrador</option><option value="gerencia" ${profile.role==='gerencia'?'selected':''}>Gerência Regional</option><option value="coordenacao" ${profile.role==='coordenacao'?'selected':''}>Coordenação</option><option value="tecnico" ${profile.role==='tecnico'?'selected':''}>Técnico da GRE</option><option value="visualizacao" ${profile.role==='visualizacao'?'selected':''}>Visualização</option><option value="escola" ${profile.role==='escola'?'selected':''}>Escola</option></select></label><label>Setor<select name="setor_id">${sectorOptions(profile.setor_id||'')}</select></label><label class="full">Escola vinculada<select name="escola_id">${schoolOptions(profile.escola_id||'')}</select></label><label class="toggle-field full"><input type="checkbox" name="ativo" value="true" ${profile.ativo!==false?'checked':''}> <span>Usuário ativo</span></label>${self?'<p class="hint full">Para evitar bloquear seu próprio acesso por engano, o sistema não permite desativar a conta atualmente conectada.</p>':''}<div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button class="btn primary">Salvar permissões</button></div></form>`);
+    openModal('Editar usuário','Usuários e permissões',`<form id="profileForm" class="form-grid" onsubmit="return false;"><input type="hidden" name="id" value="${esc(profile.id)}"><label class="full">Nome<input name="nome" value="${esc(profile.nome||'')}" required></label><label class="full">E-mail<input value="${esc(profile.email||'')}" disabled></label><label>Perfil${self?`<input type="hidden" name="role" value="${esc(profile.role)}">`:''}<select name="role" ${self?'disabled':''}><option value="admin" ${profile.role==='admin'?'selected':''}>Administrador</option><option value="gerencia" ${profile.role==='gerencia'?'selected':''}>Gerência Regional</option><option value="coordenacao" ${profile.role==='coordenacao'?'selected':''}>Coordenação</option><option value="tecnico" ${profile.role==='tecnico'?'selected':''}>Técnico da GRE</option><option value="visualizacao" ${profile.role==='visualizacao'?'selected':''}>Visualização</option><option value="escola" ${profile.role==='escola'?'selected':''}>Escola</option></select></label><label>Setor<select name="setor_id">${sectorOptions(profile.setor_id||'')}</select></label><label class="full">Escola vinculada<select name="escola_id">${schoolOptions(profile.escola_id||'')}</select></label><label class="toggle-field full"><input type="checkbox" name="ativo" value="true" ${profile.ativo!==false?'checked':''}> <span>Usuário ativo</span></label>${self?'<p class="hint full">Para evitar bloquear seu próprio acesso por engano, o sistema não permite desativar a conta atualmente conectada.</p>':''}<div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button type="button" class="btn primary" data-save-profile>Salvar</button></div></form>`);
   }
 
   async function updateTransportStatus(id,status){
@@ -754,6 +754,72 @@
     }
   }
 
+
+  async function saveProfileForm(){
+    const form=$('#profileForm');
+    if(!form) return;
+    if(!isExecutive()){
+      toast('Você não possui permissão para alterar usuários.');
+      return;
+    }
+    if(!form.reportValidity()) return;
+
+    const btn=form.querySelector('[data-save-profile]');
+    const original=btn?.textContent||'Salvar';
+
+    try{
+      if(btn){ btn.disabled=true; btn.textContent='Salvando...'; }
+
+      const d=formData(form);
+      const profile=state.profiles.find(p=>p.id===d.id);
+      if(!profile) throw new Error('Usuário não localizado.');
+
+      const isSelf=d.id===state.user?.id;
+      const patch={
+        nome:String(d.nome||'').trim(),
+        role:d.role,
+        setor_id:d.setor_id||null,
+        escola_id:d.escola_id||null,
+        ativo:form.elements.ativo.checked
+      };
+
+      if(!patch.nome) throw new Error('Informe o nome do usuário.');
+      if(isSelf && patch.ativo===false){
+        throw new Error('Você não pode desativar sua própria conta.');
+      }
+
+      const saved=await store.updateProfile(d.id,patch);
+      if(!saved?.id) throw new Error('Não foi possível salvar as alterações.');
+
+      // Atualiza imediatamente a linha da tabela, sem depender de recarregar a página.
+      const idx=state.profiles.findIndex(p=>p.id===d.id);
+      if(idx>=0) state.profiles[idx]={...state.profiles[idx],...saved,...patch};
+
+      closeModal();
+      renderUsers();
+      toast('Usuário atualizado com sucesso.');
+    }catch(err){
+      console.error('Erro ao atualizar usuário:',err);
+      const msg=err?.message||'Não foi possível salvar as alterações.';
+      toast(msg);
+      openModal(
+        'Não foi possível salvar',
+        'Usuários e Permissões',
+        `<div class="delete-confirm">
+          <p>${esc(msg)}</p>
+          <div class="modal-actions">
+            <button type="button" data-close class="btn primary">Fechar</button>
+          </div>
+        </div>`
+      );
+    }finally{
+      if(btn && document.body.contains(btn)){
+        btn.disabled=false;
+        btn.textContent=original;
+      }
+    }
+  }
+
   async function handleModalSubmit(e){
     const form=e.target; if(!(form instanceof HTMLFormElement)) return;
     try{
@@ -773,12 +839,9 @@
         e.preventDefault(); if(!canWriteOperational()){ toast('Seu perfil possui acesso somente para visualização.'); return; } const d=formData(form); const school=state.schools.find(s=>s.id===d.escola_id); await store.insert('management',{...d,escola_nome:school?.nome||null,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Acompanhamento salvo.'); return;
       }
       if(form.id==='profileForm'){
-        e.preventDefault(); if(!isExecutive()){ toast('Sem permissão.'); return; }
-        const d=formData(form); const profile=state.profiles.find(p=>p.id===d.id); if(!profile) return;
-        const isSelf=d.id===state.user?.id;
-        const patch={nome:d.nome.trim(),role:d.role,setor_id:d.setor_id||null,escola_id:d.escola_id||null,ativo:form.elements.ativo.checked};
-        if(isSelf && patch.ativo===false){ toast('Você não pode desativar sua própria conta.'); return; }
-        await store.updateProfile(d.id,patch); closeModal(); await loadData(); toast('Permissões atualizadas.'); return;
+        e.preventDefault();
+        await saveProfileForm();
+        return;
       }
     }catch(err){
       console.error(err);
@@ -800,6 +863,12 @@
   }
 
   document.addEventListener('click', async e=>{
+    const saveProfile=e.target.closest('[data-save-profile]');
+    if(saveProfile){
+      e.preventDefault();
+      await saveProfileForm();
+      return;
+    }
     const saveTransport=e.target.closest('[data-save-transport]');
     if(saveTransport){
       e.preventDefault();

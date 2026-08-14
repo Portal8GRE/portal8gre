@@ -153,3 +153,21 @@ Perfil Visualização:
 
 Antes de usar o perfil Visualização, execute:
 `supabase/update-v074.sql`
+
+
+## V0.7.5 — correção do salvamento de Usuários
+
+Causa:
+- o formulário de edição de usuário ainda podia ser enviado pelo navegador como formulário GET;
+- isso fazia os campos `id`, `nome` e `role` aparecerem na URL e nenhuma alteração chegar ao banco.
+
+Correção:
+- o formulário de usuário não realiza mais envio nativo;
+- o botão Salvar é um botão comum controlado pelo JavaScript;
+- o salvamento chama diretamente `updateProfile`;
+- após salvar, a tabela é atualizada imediatamente;
+- se houver falha, o Portal mostra uma mensagem simples;
+- a versão deixou de aparecer no rodapé, para manter a interface sem informações técnicas.
+
+Não há SQL novo nesta versão.
+Se `update-v074.sql` já foi executado com Success, basta publicar os arquivos da V0.7.5.
