@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#006633" />
-  <title>Portal 8ª GRE — Sistema Integrado</title>
+  <title>Portal 8ª GRE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -44,7 +44,7 @@
         <div class="login-card">
           <div class="login-title-row">
             <div class="mini-seal">8ª</div>
-            <div><strong>Portal 8ª GRE</strong><small>Sistema Integrado</small></div>
+            <div><strong>Portal 8ª GRE</strong><small>8ª Gerência Regional de Educação</small></div>
           </div>
           <p class="eyebrow">Acesso ao sistema</p>
           <h2>Bem-vindo</h2>
@@ -112,7 +112,6 @@
         <button class="nav-item" data-view="visitas">Ensino e Aprendizagem</button>
         <button class="nav-item" data-view="gestao">Gestão e Inspeção</button>
         <button class="nav-item" data-view="administracao">Administração</button>
-        <button class="nav-item" data-view="gestaoSetor">Gestão</button>
         <button class="nav-item" data-view="prestacao">Prestação de Contas</button>
       </nav>
     </aside>
@@ -120,15 +119,13 @@
     <main class="main-content">
       <header class="topbar utility-bar">
         <div>
-          <p class="eyebrow">Sistema Integrado da 8ª GRE</p>
+          <p class="eyebrow">8ª Gerência Regional de Educação</p>
           <h2 id="pageTitle">Painel Geral</h2>
         </div>
         <div class="top-actions">
-          <span id="storageBadge" class="badge online">Banco online</span>
           <button class="utility-link" data-view="escolas">🏫 Escolas</button>
           <button class="utility-link admin-only" data-view="usuarios">👥 Usuários</button>
           <button class="utility-link admin-only" data-view="configuracoes">⚙ Configurações</button>
-          <button id="quickAdd" class="btn primary small">+ Novo registro</button>
         </div>
       </header>
 
@@ -159,32 +156,24 @@
             <h1>Portal <span>8ª GRE</span></h1>
             <div class="title-line"></div>
             <p>O Portal 8ª GRE reúne os sistemas, informações e serviços da Gerência Regional para apoiar o trabalho dos setores e das escolas jurisdicionadas.</p>
-            <strong>Dados integrados para acompanhar, planejar e intervir com mais agilidade.</strong>
           </div>
 
           <div class="intro-cards">
-            <article class="info-card map-card">
+            <article class="info-card map-card location-card">
               <div class="info-title"><span>📍</span><strong>Localização da 8ª GRE</strong></div>
-              <div class="mini-map"><div class="map-road r1"></div><div class="map-road r2"></div><div class="map-road r3"></div><span>●</span></div>
-              <div class="info-bottom">📍 <strong>Oeiras — PI</strong></div>
+              <a class="location-map-link" href="https://maps.app.goo.gl/dnmW89pxRaRda2Yu5" target="_blank" rel="noopener noreferrer" aria-label="Abrir localização da 8ª GRE no Google Maps">
+                <div class="mini-map"><div class="map-road r1"></div><div class="map-road r2"></div><div class="map-road r3"></div><span>●</span></div>
+              </a>
+              <div class="info-bottom location-bottom">
+                <span>📍 <strong>Oeiras — PI</strong></span>
+                <a href="https://maps.app.goo.gl/dnmW89pxRaRda2Yu5" target="_blank" rel="noopener noreferrer">Abrir no Google Maps →</a>
+              </div>
             </article>
             <article class="info-card user-card">
               <div class="info-title"><span>👤</span><strong>Usuário conectado</strong></div>
               <div class="profile-placeholder"><span id="dashboardAvatar">U</span></div>
               <strong id="dashboardUserName">Usuário</strong>
               <small id="dashboardUserRole">Perfil de acesso</small>
-            </article>
-            <article class="info-card about-card">
-              <div class="info-title"><span>▣</span><strong>Sistema Integrado</strong></div>
-              <p>Transporte, visitas técnicas, gestão escolar, escolas, usuários e relatórios conectados em um único ambiente.</p>
-              <button id="quickAddHero" class="mini-action" type="button">+ Novo registro</button>
-            </article>
-            <article class="info-card status-card">
-              <div class="info-title"><span>◉</span><strong>Informações do Sistema</strong></div>
-              <div class="status-line"><span>●</span><div><small>Armazenamento</small><strong id="dashboardStorage">Demonstração local</strong></div></div>
-              <div class="status-line"><span>◷</span><div><small>Data</small><strong id="todayLabel"></strong></div></div>
-              <div class="status-line"><span>🔒</span><div><small>Acesso</small><strong>Por perfil e permissão</strong></div></div>
-              <div class="status-line"><span>☁</span><div><small>Banco online</small><strong>Preparado para Supabase</strong></div></div>
             </article>
           </div>
         </div>
@@ -214,12 +203,6 @@
             <div class="sector-head"><div class="sector-icon">▤</div><h3>Administração</h3></div>
             <ul><li>Ponto Eletrônico</li><li>Lotação</li><li>Patrimônio</li></ul>
             <button data-go="administracao" class="sector-btn">Acessar <span>→</span></button>
-          </article>
-
-          <article class="sector-card sector-purple">
-            <div class="sector-head"><div class="sector-icon">▥</div><h3>Gestão</h3></div>
-            <ul><li>ASURV</li><li>Nutricionista</li><li>Banco de Dados</li></ul>
-            <button data-go="gestaoSetor" class="sector-btn">Acessar <span>→</span></button>
           </article>
 
           <article class="sector-card sector-finance">
@@ -332,14 +315,6 @@
         </div>
       </section>
 
-      <section id="gestaoSetor" class="view">
-        <div class="module-banner purple-banner"><div><p class="eyebrow">Gestão</p><h1>Setor de Gestão</h1><p>ASURV, Nutricionista e Banco de Dados.</p></div></div>
-        <div class="placeholder-grid gestao-tools-grid">
-          <article class="placeholder-card"><span>📈</span><h3>ASURV</h3><p>Espaço do setor para acompanhamento de demandas.</p></article>
-          <article class="placeholder-card"><span>🍎</span><h3>Nutricionista</h3><p>Área para registros e acompanhamento das escolas.</p></article>
-          <article class="placeholder-card"><span>🗄</span><h3>Banco de Dados</h3><p>Consultas e organização das bases da Regional.</p></article>
-        </div>
-      </section>
 
       <section id="aulas" class="view">
         <div class="module-banner teal-banner aulas-banner">
@@ -440,7 +415,7 @@
     <footer class="portal-footer">
       <span>8ª Gerência Regional de Educação • SEDUC/PI</span>
       <span>Sistema integrado para apoiar a gestão regional.</span>
-      <span>© 2026 Portal 8ª GRE • v0.7.2</span>
+      <span>© 2026 Portal 8ª GRE • v0.7.3</span>
     </footer>
   </div>
 
@@ -452,7 +427,7 @@
   </dialog>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="js/store.js?v=0.7.2"></script>
-  <script src="js/app.js?v=0.7.2"></script>
+  <script src="js/store.js?v=0.7.3"></script>
+  <script src="js/app.js?v=0.7.3"></script>
 </body>
 </html>

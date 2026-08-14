@@ -123,3 +123,15 @@ Correção:
 
 Não há SQL novo nesta versão.
 Não é necessário reimportar o PDF se a importação anterior foi salva com sucesso.
+
+
+## V0.7.3 — simplificação da página inicial
+- Localização da 8ª GRE vinculada ao Google Maps:
+  https://maps.app.goo.gl/dnmW89pxRaRda2Yu5
+- Removida a frase “Dados integrados para acompanhar, planejar e intervir com mais agilidade.”
+- Removido o card “Sistema Integrado” e o botão “+ Novo registro”.
+- Removido o card “Informações do Sistema” e as informações técnicas sobre Supabase, armazenamento e permissões.
+- Removido o indicador “Banco online” do cabeçalho interno.
+- Removida a aba/setor “Gestão” da navegação e da página inicial.
+- Mantidos os setores: Gerência Regional, Ensino e Aprendizagem, Gestão e Inspeção, Administração e Prestação de Contas.
+- Não há SQL novo nesta versão.

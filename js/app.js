@@ -4,7 +4,7 @@
   const store = window.PortalStore;
   const state = { user: null, schools: [], transport: [], visits: [], management: [], profiles: [], sectors: [], classReports: [], classItems: [], teacherMappings: [], activeClassReportId: null, aulasModuleReady: true };
   const roleLabels = { admin:'Administrador', gerencia:'Gerência Regional', coordenacao:'Coordenação', tecnico:'Técnico da GRE', escola:'Escola' };
-  const titles = { dashboard:'Apresentação', transporte:'Gerência Regional • Transporte', visitas:'Ensino e Aprendizagem • Visitas', gestao:'Gestão e Inspeção • Acompanhamento Escolar', administracao:'Administração', gestaoSetor:'Gestão', prestacao:'Prestação de Contas', escolas:'Escolas', usuarios:'Usuários e Permissões', configuracoes:'Configurações', aulas:'Gestão e Inspeção • Acompanhamento de Aulas' };
+  const titles = { dashboard:'Apresentação', transporte:'Gerência Regional • Transporte', visitas:'Ensino e Aprendizagem • Visitas', gestao:'Gestão e Inspeção • Acompanhamento Escolar', administracao:'Administração', prestacao:'Prestação de Contas', escolas:'Escolas', usuarios:'Usuários e Permissões', configuracoes:'Configurações', aulas:'Gestão e Inspeção • Acompanhamento de Aulas' };
   let transportCalendarDate = new Date();
   const transportMonthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
@@ -60,17 +60,13 @@
     const schoolBtn=$('#newSchoolBtn'); if(schoolBtn) schoolBtn.classList.toggle('hidden', !isManager());
     const transportBtn=$('#newTransportBtn'); if(transportBtn) transportBtn.classList.toggle('hidden', !canManageTransport());
     const aulasBtn=$('#newAulasReportBtn'); if(aulasBtn) aulasBtn.classList.toggle('hidden', !canManageAulas());
-    setText('#storageBadge','Banco online');
-    const badge=$('#storageBadge'); if(badge) badge.className='badge online';
     setText('#dbStatusText','O sistema está conectado ao Supabase e os dados são gravados no banco online.');
     setText('#dashboardUserName', user.name || 'Usuário');
     setText('#dashboardUserRole', label);
     setText('#dashboardAvatar', (user.name || 'U').trim()[0].toUpperCase());
-    setText('#dashboardStorage','Banco Supabase online');
   }
 
   async function boot(){
-    setText('#todayLabel', new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'}));
     const config = await store.init();
     updateConnectionUi(config);
     const user = await store.currentSession();
@@ -861,10 +857,6 @@
     if(['openDbConfig','openDbConfig2'].includes(e.target.id)) openDbConfig();
     if(e.target.id==='clearDbConfig'){ store.clearConfig(); closeModal(); toast('Configuração removida.'); setTimeout(()=>location.reload(),500); }
     if(e.target.id==='logoutBtn'){ await store.signOut(); state.user=null; showLogin(); }
-    if(e.target.id==='quickAddHero') $('#quickAdd')?.click();
-    if(e.target.id==='quickAdd'){
-      openModal('Novo registro','Ação rápida',`<div class="roles-grid">${canManageTransport()?'<button class="btn transport" data-quick="transport">Transporte</button>':''}<button class="btn visits" data-quick="visit">Visita</button><button class="btn management" data-quick="management">Acompanhamento</button>${isManager()?'<button class="btn schools" data-quick="school">Escola</button>':''}</div>`);
-    }
     const quick=e.target.closest('[data-quick]'); if(quick){ const t=quick.dataset.quick; closeModal(); ({transport:openTransportForm,visit:openVisitForm,management:openManagementForm,school:openSchoolForm}[t])(); }
     const calendarDay=e.target.closest('[data-calendar-date]'); if(calendarDay) openTransportDay(calendarDay.dataset.calendarDate);
     const newDate=e.target.closest('[data-new-transport-date]'); if(newDate){ const date=newDate.dataset.newTransportDate; closeModal(); openTransportForm(); const input=$('#transportForm input[name="data"]'); if(input) input.value=date; }
