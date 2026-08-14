@@ -22,7 +22,7 @@ on conflict (slug) do nothing;
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   nome text,
-  role text not null default 'tecnico' check (role in ('admin','gerencia','coordenacao','tecnico','escola')),
+  role text not null default 'tecnico' check (role in ('admin','gerencia','coordenacao','tecnico','visualizacao','escola')),
   setor_id uuid references public.setores(id),
   escola_id uuid,
   ativo boolean not null default true,

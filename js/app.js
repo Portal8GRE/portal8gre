@@ -3,8 +3,8 @@
   const $$ = s => [...document.querySelectorAll(s)];
   const store = window.PortalStore;
   const state = { user: null, schools: [], transport: [], visits: [], management: [], profiles: [], sectors: [], classReports: [], classItems: [], teacherMappings: [], activeClassReportId: null, aulasModuleReady: true };
-  const roleLabels = { admin:'Administrador', gerencia:'Gerência Regional', coordenacao:'Coordenação', tecnico:'Técnico da GRE', escola:'Escola' };
-  const titles = { dashboard:'Apresentação', transporte:'Gerência Regional • Transporte', visitas:'Ensino e Aprendizagem • Visitas', gestao:'Gestão e Inspeção • Acompanhamento Escolar', administracao:'Administração', prestacao:'Prestação de Contas', escolas:'Escolas', usuarios:'Usuários e Permissões', configuracoes:'Configurações', aulas:'Gestão e Inspeção • Acompanhamento de Aulas' };
+  const roleLabels = { admin:'Administrador', gerencia:'Gerência Regional', coordenacao:'Coordenação', tecnico:'Técnico da GRE', visualizacao:'Visualização', escola:'Escola' };
+  const titles = { dashboard:'Apresentação', transporte:'Gerência Regional • Transporte', visitas:'Ensino e Aprendizagem • Visitas', gestao:'Gestão e Inspeção • Acompanhamento Escolar', administracao:'Administração', prestacao:'Prestação de Contas', escolas:'Escolas', usuarios:'Usuários e Permissões', aulas:'Gestão e Inspeção • Acompanhamento de Aulas' };
   let transportCalendarDate = new Date();
   const transportMonthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
@@ -26,6 +26,8 @@
   function canEditTransport(){ return canManageTransport(); }
   function canChangeTransportStatus(){ return canManageTransport(); }
   function canManageAulas(){ return ['admin','gerencia','coordenacao'].includes(state.user?.role); }
+  function isReadOnly(){ return state.user?.role === 'visualizacao'; }
+  function canWriteOperational(){ return ['admin','gerencia','coordenacao','tecnico'].includes(state.user?.role); }
 
   async function loadData(){
     try {
@@ -46,7 +48,7 @@
       renderAll();
     } catch(err){
       console.error(err);
-      toast('Não foi possível carregar os dados. Verifique o banco e as permissões.');
+      toast('Não foi possível carregar as informações. Tente novamente em instantes.');
     }
   }
 
@@ -60,7 +62,8 @@
     const schoolBtn=$('#newSchoolBtn'); if(schoolBtn) schoolBtn.classList.toggle('hidden', !isManager());
     const transportBtn=$('#newTransportBtn'); if(transportBtn) transportBtn.classList.toggle('hidden', !canManageTransport());
     const aulasBtn=$('#newAulasReportBtn'); if(aulasBtn) aulasBtn.classList.toggle('hidden', !canManageAulas());
-    setText('#dbStatusText','O sistema está conectado ao Supabase e os dados são gravados no banco online.');
+    const visitBtn=$('#newVisitBtn'); if(visitBtn) visitBtn.classList.toggle('hidden', !canWriteOperational());
+    const managementBtn=$('#newManagementBtn'); if(managementBtn) managementBtn.classList.toggle('hidden', !canWriteOperational());
     setText('#dashboardUserName', user.name || 'Usuário');
     setText('#dashboardUserRole', label);
     setText('#dashboardAvatar', (user.name || 'U').trim()[0].toUpperCase());
@@ -73,25 +76,7 @@
     if (user) await showApp(user); else showLogin();
   }
 
-  function updateConnectionUi(config){
-    const source = config?.source || store.getConfigSource?.() || 'none';
-    const loginStatus = $('#loginDbStatus');
-    const loginConfigBtn = $('#openDbConfig');
-    const settingsConfigBtn = $('#openDbConfig2');
-    if(source === 'vercel'){
-      if(loginStatus) loginStatus.innerHTML = '<span class="connection-dot online"></span> Banco de dados conectado automaticamente';
-      loginConfigBtn?.classList.add('hidden');
-      if(settingsConfigBtn){ settingsConfigBtn.textContent = 'Gerenciado pela Vercel'; settingsConfigBtn.disabled = true; }
-    } else if(source === 'local'){
-      if(loginStatus) loginStatus.innerHTML = '<span class="connection-dot online"></span> Banco configurado neste navegador';
-      loginConfigBtn?.classList.remove('hidden');
-      if(settingsConfigBtn){ settingsConfigBtn.textContent = 'Configurar Supabase'; settingsConfigBtn.disabled = false; }
-    } else {
-      if(loginStatus) loginStatus.innerHTML = '<span class="connection-dot"></span> Banco online ainda não configurado na Vercel';
-      loginConfigBtn?.classList.remove('hidden');
-      if(settingsConfigBtn){ settingsConfigBtn.textContent = 'Configurar Supabase'; settingsConfigBtn.disabled = false; }
-    }
-  }
+  function updateConnectionUi(config){ return; }
 
   function showLogin(){ $('#loginView')?.classList.remove('hidden'); $('#appView')?.classList.add('hidden'); }
   async function showApp(user){ $('#loginView')?.classList.add('hidden'); $('#appView')?.classList.remove('hidden'); setUser(user); await loadData(); navigate('dashboard'); }
@@ -264,7 +249,7 @@
     const importBtn=$('#newAulasReportBtn'); if(importBtn) importBtn.classList.toggle('hidden',!canManageAulas());
 
     if(!state.aulasModuleReady){
-      $('#aulasUpdateBanner').innerHTML='<strong>Atualização necessária no Supabase.</strong><span>Execute o arquivo supabase/update-v070.sql antes de usar este módulo.</span>';
+      $('#aulasUpdateBanner').innerHTML='<strong>Módulo temporariamente indisponível.</strong><span>Procure a administração do Portal 8ª GRE.</span>';
       table.innerHTML=''; $('#aulasEmpty')?.classList.remove('hidden'); return;
     }
 
@@ -440,7 +425,7 @@
       </div>
       ${canSave?`<div class="import-success"><strong>Leitura validada.</strong> O relatório pode ser salvo.</div>`:`<div class="import-warnings critical-import"><strong>Importação bloqueada:</strong> o PDF possui ${detected.toLocaleString('pt-BR')} registros detectados e ${recognized.toLocaleString('pt-BR')} reconhecidos (${rate.toFixed(1).replace('.',',')}%). Nenhum dado será salvo para evitar painel incompleto.</div>`}
       <div class="import-preview-table"><table><thead><tr><th>Escola</th><th>Modalidade</th><th>Período</th><th>Turma</th><th>Disciplina</th><th>CH total</th><th>Confirmadas</th><th>Aguardando</th></tr></thead><tbody>${sample.map(r=>`<tr><td>${esc(r.escola_nome)}</td><td>${esc(modalidadeFromTurma(r.turma))}</td><td>${esc(r.periodo)}</td><td>${esc(r.turma)}</td><td>${esc(r.disciplina)}</td><td>${r.carga_horaria_total}</td><td>${r.aulas_confirmadas}</td><td>${r.aulas_aguardando_confirmacao}</td></tr>`).join('')}</tbody></table></div>
-      <p class="hint">Arquivo: ${esc(p.file.name)}. O PDF original será armazenado no Supabase junto com o histórico.</p>
+      <p class="hint">Arquivo: ${esc(p.file.name)}. O PDF original ficará disponível no histórico do Portal.</p>
       <div class="modal-actions"><button type="button" data-close class="btn secondary">Cancelar</button><button type="button" id="confirmAulasImportBtn" class="btn aulas-btn" ${canSave?'':'disabled'}>Confirmar e salvar</button></div>
     `);
   }
@@ -594,16 +579,6 @@
   function openModal(title, eyebrow, html){ setText('#modalTitle',title); setText('#modalEyebrow',eyebrow); const body=$('#modalBody'); if(body) body.innerHTML=html; $('#modal')?.showModal(); }
   function closeModal(){ const modal=$('#modal'); if(modal?.open) modal.close(); }
 
-  function openDbConfig(){
-    const source = store.getConfigSource?.() || 'none';
-    if(source === 'vercel'){
-      openModal('Banco conectado','Configuração automática',`<div class="info-banner"><strong>Supabase conectado automaticamente.</strong><br>As credenciais públicas estão configuradas nas Environment Variables do projeto na Vercel.</div><div class="modal-actions"><button type="button" data-close class="btn primary">Fechar</button></div>`);
-      return;
-    }
-    const cfg = store.getConfig() || {};
-    openModal('Conectar banco Supabase','Configuração técnica',`<form id="dbConfigForm" class="form-grid"><label class="full">Project URL<input name="url" value="${esc(cfg.url||'')}" placeholder="https://xxxx.supabase.co" required></label><label class="full">Publishable / anon key<textarea name="key" placeholder="sb_publishable_..." required>${esc(cfg.key||'')}</textarea></label><p class="hint full">Fallback técnico. Na produção, use as variáveis da Vercel. Nunca use service_role no navegador.</p><div class="modal-actions full"><button type="button" id="clearDbConfig" class="btn secondary">Remover configuração local</button><button class="btn primary">Salvar e testar</button></div></form>`);
-  }
-
   function openSchoolForm(){
     if(!isManager()){ toast('Seu perfil não possui permissão para cadastrar escolas.'); return; }
     openModal('Nova escola','Cadastro central',`<form id="schoolForm" class="form-grid"><label class="full">Nome da escola<input name="nome" required></label><label>Código INEP<input name="inep"></label><label>Município<input name="municipio" required></label><label>Gestor(a)<input name="gestor"></label><label>Telefone<input name="telefone"></label><label class="full">E-mail<input name="email" type="email"></label><div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button class="btn schools">Salvar escola</button></div></form>`);
@@ -631,17 +606,19 @@
   }
 
   function openVisitForm(){
+    if(!canWriteOperational()){ toast('Seu perfil possui acesso somente para visualização.'); return; }
     openModal('Nova visita técnica','Ensino e Aprendizagem',`<form id="visitForm" class="form-grid"><label>Data<input name="data" type="date" required></label><label>Horário<input name="horario" type="time"></label><label class="full">Escola<select name="escola_id" required>${schoolOptions()}</select></label><label>Técnico responsável<input name="tecnico" value="${esc(state.user?.name||'')}" required></label><label>Município<input name="municipio"></label><label class="full">Objetivo da visita<textarea name="objetivo" required></textarea></label><label class="full">Observações<textarea name="observacoes"></textarea></label><label class="full">Encaminhamentos<textarea name="encaminhamentos"></textarea></label><input type="hidden" name="status" value="Registrada"><div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button class="btn visits">Salvar visita</button></div></form>`);
   }
 
   function openManagementForm(){
+    if(!canWriteOperational()){ toast('Seu perfil possui acesso somente para visualização.'); return; }
     openModal('Novo acompanhamento','Gestão e Inspeção',`<form id="managementForm" class="form-grid"><label class="full">Escola<select name="escola_id" required>${schoolOptions()}</select></label><label>Período<input name="periodo" placeholder="Ex.: Agosto/2026" required></label><label>Status<select name="status"><option>Em acompanhamento</option><option>Intervenção necessária</option><option>Concluída</option></select></label><label>Aulas previstas<input name="aulas_previstas" type="number" min="0" value="0"></label><label>Aulas dadas<input name="aulas_dadas" type="number" min="0" value="0"></label><label>Frequência (%)<input name="frequencia" type="number" min="0" max="100" step="0.01" value="0"></label><label>Média de notas<input name="media_notas" type="number" min="0" step="0.01" value="0"></label><label class="full">Intervenção / encaminhamento<textarea name="intervencao"></textarea></label><label class="full">Responsável<input name="responsavel" value="${esc(state.user?.name||'')}"></label><div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button class="btn management">Salvar acompanhamento</button></div></form>`);
   }
 
   function openProfileForm(profile){
     if(!isExecutive()) return;
     const self=profile.id===state.user?.id;
-    openModal('Editar usuário','Usuários e permissões',`<form id="profileForm" class="form-grid"><input type="hidden" name="id" value="${esc(profile.id)}"><label class="full">Nome<input name="nome" value="${esc(profile.nome||'')}" required></label><label class="full">E-mail<input value="${esc(profile.email||'')}" disabled></label><label>Perfil${self?`<input type="hidden" name="role" value="${esc(profile.role)}">`:''}<select name="role" ${self?'disabled':''}><option value="admin" ${profile.role==='admin'?'selected':''}>Administrador</option><option value="gerencia" ${profile.role==='gerencia'?'selected':''}>Gerência Regional</option><option value="coordenacao" ${profile.role==='coordenacao'?'selected':''}>Coordenação</option><option value="tecnico" ${profile.role==='tecnico'?'selected':''}>Técnico da GRE</option><option value="escola" ${profile.role==='escola'?'selected':''}>Escola</option></select></label><label>Setor<select name="setor_id">${sectorOptions(profile.setor_id||'')}</select></label><label class="full">Escola vinculada<select name="escola_id">${schoolOptions(profile.escola_id||'')}</select></label><label class="toggle-field full"><input type="checkbox" name="ativo" value="true" ${profile.ativo!==false?'checked':''}> <span>Usuário ativo</span></label>${self?'<p class="hint full">Para evitar bloquear seu próprio acesso por engano, o sistema não permite desativar a conta atualmente conectada.</p>':''}<div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button class="btn primary">Salvar permissões</button></div></form>`);
+    openModal('Editar usuário','Usuários e permissões',`<form id="profileForm" class="form-grid"><input type="hidden" name="id" value="${esc(profile.id)}"><label class="full">Nome<input name="nome" value="${esc(profile.nome||'')}" required></label><label class="full">E-mail<input value="${esc(profile.email||'')}" disabled></label><label>Perfil${self?`<input type="hidden" name="role" value="${esc(profile.role)}">`:''}<select name="role" ${self?'disabled':''}><option value="admin" ${profile.role==='admin'?'selected':''}>Administrador</option><option value="gerencia" ${profile.role==='gerencia'?'selected':''}>Gerência Regional</option><option value="coordenacao" ${profile.role==='coordenacao'?'selected':''}>Coordenação</option><option value="tecnico" ${profile.role==='tecnico'?'selected':''}>Técnico da GRE</option><option value="visualizacao" ${profile.role==='visualizacao'?'selected':''}>Visualização</option><option value="escola" ${profile.role==='escola'?'selected':''}>Escola</option></select></label><label>Setor<select name="setor_id">${sectorOptions(profile.setor_id||'')}</select></label><label class="full">Escola vinculada<select name="escola_id">${schoolOptions(profile.escola_id||'')}</select></label><label class="toggle-field full"><input type="checkbox" name="ativo" value="true" ${profile.ativo!==false?'checked':''}> <span>Usuário ativo</span></label>${self?'<p class="hint full">Para evitar bloquear seu próprio acesso por engano, o sistema não permite desativar a conta atualmente conectada.</p>':''}<div class="modal-actions full"><button type="button" data-close class="btn secondary">Cancelar</button><button class="btn primary">Salvar permissões</button></div></form>`);
   }
 
   async function updateTransportStatus(id,status){
@@ -730,7 +707,7 @@
         const saved = await store.createTransport(payload);
 
         if(!saved || !saved.id){
-          throw new Error('O Supabase não retornou o registro criado.');
+          throw new Error('Não foi possível concluir o agendamento.');
         }
 
         savedRecordId = saved.id;
@@ -766,11 +743,9 @@
       toast(msg);
       openModal(
         'Não foi possível salvar',
-        'Diagnóstico do Transporte',
+        'Agendamento de Transporte',
         `<div class="delete-confirm">
-          <p>O agendamento não foi gravado.</p>
-          <p class="hint"><strong>Mensagem técnica:</strong><br>${esc(msg)}</p>
-          <p class="hint">Versão do módulo: <strong>v0.6.5</strong></p>
+          <p>Não foi possível concluir o agendamento. Tente novamente.</p>
           <div class="modal-actions">
             <button type="button" data-close class="btn primary">Fechar</button>
           </div>
@@ -782,9 +757,6 @@
   async function handleModalSubmit(e){
     const form=e.target; if(!(form instanceof HTMLFormElement)) return;
     try{
-      if(form.id==='dbConfigForm'){
-        e.preventDefault(); const d=formData(form); store.setConfig({url:d.url.trim(),key:d.key.trim()}); store.getSupabase(); toast('Configuração salva.'); closeModal(); location.reload(); return;
-      }
       if(form.id==='schoolForm'){
         e.preventDefault(); if(!isManager()){ toast('Sem permissão.'); return; }
         const d=formData(form); await store.insert('schools',{...d,ativo:true,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Escola cadastrada.'); return;
@@ -795,10 +767,10 @@
         return;
       }
       if(form.id==='visitForm'){
-        e.preventDefault(); const d=formData(form); const school=state.schools.find(s=>s.id===d.escola_id); await store.insert('visits',{...d,escola_nome:school?.nome||null,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Visita salva no histórico.'); return;
+        e.preventDefault(); if(!canWriteOperational()){ toast('Seu perfil possui acesso somente para visualização.'); return; } const d=formData(form); const school=state.schools.find(s=>s.id===d.escola_id); await store.insert('visits',{...d,escola_nome:school?.nome||null,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Visita salva no histórico.'); return;
       }
       if(form.id==='managementForm'){
-        e.preventDefault(); const d=formData(form); const school=state.schools.find(s=>s.id===d.escola_id); await store.insert('management',{...d,escola_nome:school?.nome||null,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Acompanhamento salvo.'); return;
+        e.preventDefault(); if(!canWriteOperational()){ toast('Seu perfil possui acesso somente para visualização.'); return; } const d=formData(form); const school=state.schools.find(s=>s.id===d.escola_id); await store.insert('management',{...d,escola_nome:school?.nome||null,created_by:state.user?.id||null}); closeModal(); await loadData(); toast('Acompanhamento salvo.'); return;
       }
       if(form.id==='profileForm'){
         e.preventDefault(); if(!isExecutive()){ toast('Sem permissão.'); return; }
@@ -815,10 +787,9 @@
       if(form?.id==='transportForm'){
         openModal(
           'Não foi possível salvar',
-          'Diagnóstico do Transporte',
+          'Agendamento de Transporte',
           `<div class="delete-confirm">
-            <p>O banco recusou este agendamento.</p>
-            <p class="hint"><strong>Motivo informado pelo Supabase:</strong><br>${esc(msg)}</p>
+            <p>Não foi possível concluir o agendamento. Tente novamente.</p>
             <div class="modal-actions">
               <button type="button" data-close class="btn primary">Fechar</button>
             </div>
@@ -854,8 +825,6 @@
     if(e.target.id==='transportNextMonth'){ transportCalendarDate=new Date(transportCalendarDate.getFullYear(),transportCalendarDate.getMonth()+1,1); renderTransportCalendar(); }
     if(e.target.id==='newVisitBtn') openVisitForm();
     if(e.target.id==='newManagementBtn') openManagementForm();
-    if(['openDbConfig','openDbConfig2'].includes(e.target.id)) openDbConfig();
-    if(e.target.id==='clearDbConfig'){ store.clearConfig(); closeModal(); toast('Configuração removida.'); setTimeout(()=>location.reload(),500); }
     if(e.target.id==='logoutBtn'){ await store.signOut(); state.user=null; showLogin(); }
     const quick=e.target.closest('[data-quick]'); if(quick){ const t=quick.dataset.quick; closeModal(); ({transport:openTransportForm,visit:openVisitForm,management:openManagementForm,school:openSchoolForm}[t])(); }
     const calendarDay=e.target.closest('[data-calendar-date]'); if(calendarDay) openTransportDay(calendarDay.dataset.calendarDate);

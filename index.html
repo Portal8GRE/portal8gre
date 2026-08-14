@@ -30,13 +30,13 @@
         <div>
           <p class="login-kicker">8ª Gerência Regional de Educação</p>
           <h1>Portal <span>8ª GRE</span></h1>
-          <p>Sistema integrado para transporte, visitas técnicas, acompanhamento das escolas, gestão e relatórios.</p>
+          <p>Ambiente de acesso aos serviços, acompanhamentos e informações da 8ª Gerência Regional de Educação.</p>
         </div>
         <div class="login-features">
-          <span>Dados centralizados</span>
+          <span>Informações organizadas</span>
           <span>Histórico por escola</span>
-          <span>Acesso por perfil</span>
-          <span>Banco de dados na nuvem</span>
+          <span>Acompanhamento regional</span>
+          <span>Acesso seguro</span>
         </div>
       </div>
 
@@ -48,7 +48,7 @@
           </div>
           <p class="eyebrow">Acesso ao sistema</p>
           <h2>Bem-vindo</h2>
-          <p class="muted">Entre com seu usuário e senha. A conexão com o banco de dados é realizada automaticamente pelo sistema.</p>
+          <p class="muted">Entre com seu usuário e senha para acessar o Portal 8ª GRE.</p>
 
           <form id="loginForm" class="form-stack">
             <label>E-mail
@@ -59,8 +59,6 @@
             </label>
             <button class="btn primary full" type="submit">Entrar</button>
           </form>
-
-          <div id="loginDbStatus" class="login-db-status"><span class="connection-dot"></span> Verificando conexão com o banco...</div><button id="openDbConfig" class="text-button" type="button">Configuração técnica do banco</button>
         </div>
       </div>
     </div>
@@ -125,7 +123,6 @@
         <div class="top-actions">
           <button class="utility-link" data-view="escolas">🏫 Escolas</button>
           <button class="utility-link admin-only" data-view="usuarios">👥 Usuários</button>
-          <button class="utility-link admin-only" data-view="configuracoes">⚙ Configurações</button>
         </div>
       </header>
 
@@ -236,7 +233,7 @@
           <div><p class="eyebrow">Gerência Regional</p><h1>Agendamento de Transporte</h1><p>A Gerência organiza os deslocamentos; os demais perfis acompanham a agenda em modo de visualização.</p></div>
           <button id="newTransportBtn" class="btn transport">+ Novo agendamento</button>
         </div>
-        <div class="info-banner transport-access-note"><strong>Fluxo do módulo:</strong> somente a Gerência (e o Administrador técnico) pode criar, editar, cancelar ou excluir agendamentos. Os demais usuários têm acesso somente para visualização. O sistema alerta quando existem viagens para a mesma escola ou município no mesmo dia.</div>
+        <div class="info-banner transport-access-note"><strong>Fluxo do módulo:</strong> somente a Gerência pode criar, editar, cancelar ou excluir agendamentos. Os demais usuários têm acesso somente para visualização. O sistema alerta quando existem viagens para a mesma escola ou município no mesmo dia.</div>
         <div class="vehicle-strip">
           <article><span class="vehicle-dot s10"></span><div><small>Veículo</small><strong>S10</strong></div><span id="countS10" class="counter">0</span></article>
           <article><span class="vehicle-dot logan"></span><div><small>Veículo</small><strong>Logan</strong></div><span id="countLogan" class="counter">0</span></article>
@@ -384,9 +381,8 @@
 
       <section id="usuarios" class="view">
         <div class="module-banner users-banner">
-          <div><p class="eyebrow">Administração do Sistema</p><h1>Usuários e Permissões</h1><p>Gerência e administrador organizam perfil, setor, escola vinculada e situação de acesso.</p></div>
+          <div><p class="eyebrow">Controle de Acessos</p><h1>Usuários e Permissões</h1><p>Definição dos perfis de acesso ao Portal 8ª GRE.</p></div>
         </div>
-        <div class="info-banner"><strong>Criação da conta:</strong> por segurança, a conta de login ainda é criada em <strong>Supabase → Authentication → Users</strong>. Depois disso, ela aparece automaticamente nesta tela para a Gerência definir as permissões.</div>
         <article class="panel">
           <div class="panel-header wrap">
             <div><p class="eyebrow">Acessos</p><h3>Usuários cadastrados</h3></div>
@@ -402,20 +398,16 @@
         </article>
         <article class="panel">
           <div class="panel-header"><div><p class="eyebrow">Perfis</p><h3>Níveis de acesso</h3></div></div>
-          <div class="roles-grid"><div><strong>Administrador</strong><span>Acesso total e configurações</span></div><div><strong>Gerência</strong><span>Visão geral e controle exclusivo do Transporte</span></div><div><strong>Coordenação</strong><span>Acompanha os registros do seu setor</span></div><div><strong>Técnico</strong><span>Registra visitas e acompanha os agendamentos</span></div><div><strong>Escola</strong><span>Acesso aos serviços destinados à unidade escolar</span></div></div>
+          <div class="roles-grid"><div><strong>Administrador</strong><span>Acesso geral ao Portal</span></div><div><strong>Gerência</strong><span>Visão geral e controle do Transporte</span></div><div><strong>Coordenação</strong><span>Acompanha e registra informações do seu setor</span></div><div><strong>Técnico</strong><span>Registra visitas e acompanhamentos autorizados</span></div><div><strong>Visualização</strong><span>Consulta as informações sem incluir, editar ou excluir registros</span></div><div><strong>Escola</strong><span>Acesso aos serviços destinados à unidade escolar</span></div></div>
         </article>
       </section>
 
-      <section id="configuracoes" class="view">
-        <div class="module-banner config-banner"><div><p class="eyebrow">Sistema</p><h1>Configurações</h1><p>Banco de dados e informações técnicas da aplicação.</p></div></div>
-        <article class="panel config-panel"><div><h3>Banco de dados</h3><p id="dbStatusText">Verificando conexão com o banco de dados...</p><small>Na produção, a conexão é gerenciada automaticamente pela Vercel.</small></div><button id="openDbConfig2" class="btn secondary">Configurar Supabase</button></article>
-      </section>
     </main>
 
     <footer class="portal-footer">
       <span>8ª Gerência Regional de Educação • SEDUC/PI</span>
       <span>Sistema integrado para apoiar a gestão regional.</span>
-      <span>© 2026 Portal 8ª GRE • v0.7.3</span>
+      <span>© 2026 Portal 8ª GRE • v0.7.4</span>
     </footer>
   </div>
 
@@ -427,7 +419,7 @@
   </dialog>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="js/store.js?v=0.7.3"></script>
-  <script src="js/app.js?v=0.7.3"></script>
+  <script src="js/store.js?v=0.7.4"></script>
+  <script src="js/app.js?v=0.7.4"></script>
 </body>
 </html>

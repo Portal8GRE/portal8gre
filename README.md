@@ -135,3 +135,21 @@ Não é necessário reimportar o PDF se a importação anterior foi salva com su
 - Removida a aba/setor “Gestão” da navegação e da página inicial.
 - Mantidos os setores: Gerência Regional, Ensino e Aprendizagem, Gestão e Inspeção, Administração e Prestação de Contas.
 - Não há SQL novo nesta versão.
+
+
+## V0.7.4 — Portal sem informações técnicas + perfil Visualização
+
+Alterações visíveis:
+- retiradas referências a banco de dados, Supabase, Vercel, conexão e configuração técnica;
+- retirada a mensagem de criação de contas via Supabase da tela de Usuários;
+- retirada a área Configurações da interface;
+- mensagens de erro passam a ser institucionais, sem diagnóstico técnico exposto;
+- criado o perfil **Visualização**.
+
+Perfil Visualização:
+- pode consultar Transporte, Visitas, Gestão e Inspeção, Acompanhamento de Aulas, Escolas e demais áreas liberadas;
+- não pode criar, editar, excluir, importar relatórios ou alterar permissões;
+- a restrição foi aplicada tanto na interface quanto no banco para Visitas e Gestão/Inspeção.
+
+Antes de usar o perfil Visualização, execute:
+`supabase/update-v074.sql`
