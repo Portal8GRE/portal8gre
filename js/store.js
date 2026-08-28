@@ -175,6 +175,20 @@
   }
 
 
+
+  async function listPublicTransport(accessKey) {
+    const client = getSupabase();
+    if (!client) throw new Error('Agenda indisponível.');
+    if (!accessKey) throw new Error('Link de acesso inválido.');
+
+    const { data, error } = await client.rpc('list_transport_motoristas', {
+      access_key: accessKey
+    });
+
+    if (error) throw error;
+    return data || [];
+  }
+
   async function createTransport(record) {
     const client = getSupabase();
     if (!client) throw new Error('Banco Supabase indisponível.');
@@ -370,6 +384,7 @@
     list,
     insert,
     createTransport,
+    listPublicTransport,
     update,
     remove,
     listProfiles,

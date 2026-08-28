@@ -171,3 +171,27 @@ Correção:
 
 Não há SQL novo nesta versão.
 Se `update-v074.sql` já foi executado com Success, basta publicar os arquivos da V0.7.5.
+
+
+## V0.7.6 — Acesso direto dos Motoristas
+
+Foi criado um acesso exclusivo, sem login e senha, que abre diretamente o
+calendário de Transporte em modo somente leitura.
+
+Link desta instalação:
+https://portal8gre-one.vercel.app/motoristas?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
+
+Características:
+- abre direto no calendário;
+- não mostra outras áreas do Portal;
+- não permite incluir, editar, cancelar ou excluir;
+- mostra os deslocamentos, horários, destinos, responsável, participantes e finalidade;
+- possui navegação por mês e botão de atualização;
+- o link possui uma chave exclusiva; sem a chave, a agenda não é aberta;
+- a chave não fica escrita no código do site: o banco guarda apenas o hash da chave.
+
+Antes de usar, execute `supabase/update-v076.sql` no SQL Editor e publique todos
+os arquivos desta versão.
+
+Se for necessário trocar o link futuramente, gere uma nova chave e atualize o
+hash na tabela `portal_links_acesso`.

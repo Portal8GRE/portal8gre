@@ -6,6 +6,9 @@
   const roleLabels = { admin:'Administrador', gerencia:'Gerência Regional', coordenacao:'Coordenação', tecnico:'Técnico da GRE', visualizacao:'Visualização', escola:'Escola' };
   const titles = { dashboard:'Apresentação', transporte:'Gerência Regional • Transporte', visitas:'Ensino e Aprendizagem • Visitas', gestao:'Gestão e Inspeção • Acompanhamento Escolar', administracao:'Administração', prestacao:'Prestação de Contas', escolas:'Escolas', usuarios:'Usuários e Permissões', aulas:'Gestão e Inspeção • Acompanhamento de Aulas' };
   let transportCalendarDate = new Date();
+  let driverCalendarDate = new Date();
+  let driverTransport = [];
+  let driverAccessKey = '';
   const transportMonthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
   function toast(message) {
@@ -69,9 +72,19 @@
     setText('#dashboardAvatar', (user.name || 'U').trim()[0].toUpperCase());
   }
 
+  function isDriverAccess(){
+    return location.pathname.replace(/\/$/,'')==='/motoristas' || new URLSearchParams(location.search).has('acesso');
+  }
+
   async function boot(){
     const config = await store.init();
     updateConnectionUi(config);
+
+    if(isDriverAccess()){
+      await showDriverAccess();
+      return;
+    }
+
     const user = await store.currentSession();
     if (user) await showApp(user); else showLogin();
   }
@@ -80,6 +93,131 @@
 
   function showLogin(){ $('#loginView')?.classList.remove('hidden'); $('#appView')?.classList.add('hidden'); }
   async function showApp(user){ $('#loginView')?.classList.add('hidden'); $('#appView')?.classList.remove('hidden'); setUser(user); await loadData(); navigate('dashboard'); }
+
+  function driverVehicleClass(vehicle){ return vehicle==='S10'?'s10':vehicle==='Logan'?'logan':'polo'; }
+
+  function driverFmtTime(v){
+    return String(v||'').slice(0,5) || '—';
+  }
+
+  async function showDriverAccess(){
+    $('#loginView')?.classList.add('hidden');
+    $('#appView')?.classList.add('hidden');
+    $('#driverView')?.classList.remove('hidden');
+
+    driverAccessKey=new URLSearchParams(location.search).get('acesso')||'';
+    await loadDriverTransport();
+  }
+
+  async function loadDriverTransport(){
+    const area=$('#driverCalendarArea'), upcoming=$('#driverUpcoming'), error=$('#driverAccessError');
+    const refresh=$('#driverRefreshBtn');
+    try{
+      if(refresh){refresh.disabled=true;refresh.textContent='↻ Atualizando...';}
+      error?.classList.add('hidden');
+
+      driverTransport=await store.listPublicTransport(driverAccessKey);
+
+      area?.classList.remove('hidden');
+      upcoming?.classList.remove('hidden');
+      setText('#driverUpdatedAt',`Atualizado em ${new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}`);
+      renderDriverCalendar();
+      renderDriverUpcoming();
+    }catch(err){
+      console.error('Agenda dos motoristas:',err);
+      driverTransport=[];
+      area?.classList.add('hidden');
+      upcoming?.classList.add('hidden');
+      error?.classList.remove('hidden');
+      setText('#driverUpdatedAt','');
+    }finally{
+      if(refresh){refresh.disabled=false;refresh.textContent='↻ Atualizar agenda';}
+    }
+  }
+
+  function renderDriverCalendar(){
+    const grid=$('#driverCalendar'), month=$('#driverMonthLabel'), toolbar=$('#driverMonthToolbarLabel');
+    if(!grid) return;
+
+    const y=driverCalendarDate.getFullYear(), m=driverCalendarDate.getMonth();
+    const label=`${transportMonthNames[m]} de ${y}`;
+    if(month) month.textContent=label;
+    if(toolbar) toolbar.textContent=label;
+
+    const first=new Date(y,m,1), last=new Date(y,m+1,0);
+    const cells=[];
+    for(let i=0;i<first.getDay();i++) cells.push('<div class="calendar-day outside"></div>');
+
+    for(let d=1;d<=last.getDate();d++){
+      const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const events=driverTransport
+        .filter(x=>String(x.data||'').slice(0,10)===key && x.status!=='Cancelado')
+        .sort((a,b)=>String(a.hora_saida||'').localeCompare(String(b.hora_saida||'')));
+
+      const shown=events.slice(0,3).map(x=>`<div class="calendar-event ${driverVehicleClass(x.veiculo)}" title="${esc(x.veiculo)} • ${esc(x.destino||x.escola_nome||'Destino')}">${esc(x.veiculo)} • ${esc(x.destino||x.escola_nome||'Destino')}</div>`).join('');
+      const more=events.length>3?`<div class="calendar-more">+${events.length-3} agendamento(s)</div>`:'';
+      const today=new Date();
+      const isToday=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
+
+      cells.push(`<button type="button" class="calendar-day driver-calendar-day ${events.length?'has-events':''} ${isToday?'today':''}" data-driver-date="${key}">
+        <span class="calendar-number">${d}</span>
+        <div class="calendar-events">${shown}${more}</div>
+      </button>`);
+    }
+    grid.innerHTML=cells.join('');
+  }
+
+  function renderDriverUpcoming(){
+    const el=$('#driverUpcomingList');
+    if(!el) return;
+    const today=new Date();
+    today.setHours(0,0,0,0);
+    const todayKey=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+    const rows=[...driverTransport]
+      .filter(x=>x.status!=='Cancelado' && String(x.data||'').slice(0,10)>=todayKey)
+      .sort((a,b)=>`${String(a.data||'')}${String(a.hora_saida||'')}`.localeCompare(`${String(b.data||'')}${String(b.hora_saida||'')}`))
+      .slice(0,8);
+
+    el.innerHTML=rows.length?rows.map(x=>`<button class="driver-upcoming-item" type="button" data-driver-date="${esc(String(x.data||'').slice(0,10))}">
+      <div class="driver-upcoming-date"><strong>${esc(fmtDate(x.data))}</strong><span>${esc(driverFmtTime(x.hora_saida))}</span></div>
+      <div class="driver-upcoming-main"><strong>${esc(x.destino||x.escola_nome||'Destino')}</strong><span>${esc(x.finalidade||'Deslocamento')}</span></div>
+      <span class="vehicle-chip ${driverVehicleClass(x.veiculo)}">${esc(x.veiculo||'—')}</span>
+    </button>`).join(''):'<div class="calendar-empty-day">Nenhum deslocamento futuro registrado.</div>';
+  }
+
+  function openDriverDay(key){
+    const list=driverTransport
+      .filter(x=>x.status!=='Cancelado' && String(x.data||'').slice(0,10)===key)
+      .sort((a,b)=>String(a.hora_saida||'').localeCompare(String(b.hora_saida||'')));
+
+    const [y,m,d]=key.split('-').map(Number);
+    setText('#driverModalTitle',`${String(d).padStart(2,'0')} de ${transportMonthNames[m-1]} de ${y}`);
+
+    const body=$('#driverModalBody');
+    if(!body) return;
+
+    body.innerHTML=list.length?`<div class="day-bookings">${list.map(x=>`<article class="day-booking driver-day-booking">
+      <div class="day-booking-head">
+        <div><p class="eyebrow">${esc(x.status||'Confirmado')}</p><h3>${esc(x.finalidade||'Deslocamento')}</h3></div>
+        <span class="vehicle-chip ${driverVehicleClass(x.veiculo)}">${esc(x.veiculo||'—')}</span>
+      </div>
+      <div class="booking-detail-grid">
+        <div class="booking-detail"><small>Escola / destino</small><strong>${esc(x.escola_nome||x.destino||'—')}</strong></div>
+        <div class="booking-detail"><small>Município / destino</small><strong>${esc(x.destino||'—')}</strong></div>
+        <div class="booking-detail"><small>Responsável</small><strong>${esc(x.responsavel||'—')}</strong></div>
+        <div class="booking-detail"><small>Quem irá</small><strong>${esc(x.participantes||'—')}</strong></div>
+        <div class="booking-detail"><small>Saída da 8ª GRE</small><strong>${esc(driverFmtTime(x.hora_saida))}</strong></div>
+        <div class="booking-detail"><small>Previsão de retorno</small><strong>${esc(driverFmtTime(x.previsao_retorno))}</strong></div>
+      </div>
+    </article>`).join('')}</div>`:'<div class="calendar-empty-day">Nenhum transporte agendado para esta data.</div>';
+
+    $('#driverModal')?.classList.remove('hidden');
+  }
+
+  function closeDriverModal(){
+    $('#driverModal')?.classList.add('hidden');
+  }
 
   function navigate(view){
     if(view==='usuarios' && !isExecutive()){ toast('Apenas Gerência e Administrador podem gerenciar usuários.'); return; }
@@ -863,6 +1001,11 @@
   }
 
   document.addEventListener('click', async e=>{
+    if(e.target.id==='driverRefreshBtn'){ await loadDriverTransport(); return; }
+    if(e.target.id==='driverPrevMonth'){ driverCalendarDate=new Date(driverCalendarDate.getFullYear(),driverCalendarDate.getMonth()-1,1); renderDriverCalendar(); return; }
+    if(e.target.id==='driverNextMonth'){ driverCalendarDate=new Date(driverCalendarDate.getFullYear(),driverCalendarDate.getMonth()+1,1); renderDriverCalendar(); return; }
+    const driverDate=e.target.closest('[data-driver-date]'); if(driverDate){ openDriverDay(driverDate.dataset.driverDate); return; }
+    if(e.target.closest('[data-close-driver-modal]')){ closeDriverModal(); return; }
     const saveProfile=e.target.closest('[data-save-profile]');
     if(saveProfile){
       e.preventDefault();
