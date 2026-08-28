@@ -195,3 +195,22 @@ os arquivos desta versão.
 
 Se for necessário trocar o link futuramente, gere uma nova chave e atualize o
 hash na tabela `portal_links_acesso`.
+
+
+## V0.7.7 — correção do 404 no acesso dos Motoristas
+
+Causa:
+- a URL `/motoristas` dependia de uma regra de rewrite da Vercel;
+- no deploy publicado essa rota não foi encontrada e a Vercel respondeu `404: NOT_FOUND`
+  antes mesmo de o Portal carregar.
+
+Correção:
+- agora existe um arquivo físico `motoristas.html` na raiz do projeto;
+- com `cleanUrls: true`, a própria Vercel publica esse arquivo como `/motoristas`;
+- não dependemos mais de rewrite;
+- o acesso continua usando a mesma chave exclusiva e continua somente leitura.
+
+Não há SQL novo nesta versão se `update-v076.sql` já foi executado com Success.
+
+Após publicar todos os arquivos da V0.7.7, use o mesmo link:
+https://portal8gre-one.vercel.app/motoristas?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
