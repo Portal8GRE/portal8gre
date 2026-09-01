@@ -175,19 +175,6 @@
   }
 
 
-  async function listPublicTransport(accessKey) {
-    const client = getSupabase();
-    if (!client) throw new Error('Agenda indisponível.');
-    if (!accessKey) throw new Error('Link de acesso inválido.');
-
-    const { data, error } = await client.rpc('list_transport_motoristas', {
-      access_key: accessKey
-    });
-
-    if (error) throw error;
-    return data || [];
-  }
-
   async function createTransport(record) {
     const client = getSupabase();
     if (!client) throw new Error('Banco Supabase indisponível.');
@@ -257,6 +244,50 @@
   }
 
 
+
+
+  async function listIdebResults() {
+    const client = getSupabase();
+    if (!client) throw new Error('Serviço indisponível.');
+    const { data, error } = await client
+      .from('ideb_resultados')
+      .select('*')
+      .order('etapa', { ascending: true })
+      .order('ano', { ascending: true })
+      .order('escola_nome', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function listIdebComposition() {
+    const client = getSupabase();
+    if (!client) throw new Error('Serviço indisponível.');
+    const { data, error } = await client
+      .from('ideb_composicao_gre')
+      .select('resultado_id,incluida,updated_at');
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function saveIdebComposition(items) {
+    const client = getSupabase();
+    if (!client) throw new Error('Serviço indisponível.');
+    const user=(await client.auth.getUser()).data?.user;
+    if(!user) throw new Error('Sessão expirada. Entre novamente.');
+    if(!Array.isArray(items) || !items.length) return [];
+    const payload=items.map(x=>({
+      resultado_id:x.resultado_id,
+      incluida:!!x.incluida,
+      updated_by:user.id,
+      updated_at:new Date().toISOString()
+    }));
+    const { data, error } = await client
+      .from('ideb_composicao_gre')
+      .upsert(payload,{onConflict:'resultado_id'})
+      .select('resultado_id,incluida,updated_at');
+    if(error) throw error;
+    return data || [];
+  }
 
   async function listClassReports() {
     const client = getSupabase();
@@ -383,12 +414,14 @@
     list,
     insert,
     createTransport,
-    listPublicTransport,
     update,
     remove,
     listProfiles,
     updateProfile,
     listSectors,
+    listIdebResults,
+    listIdebComposition,
+    saveIdebComposition,
     listClassReports,
     listClassItems,
     listTeacherMappings,

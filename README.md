@@ -173,28 +173,27 @@ Não há SQL novo nesta versão.
 Se `update-v074.sql` já foi executado com Success, basta publicar os arquivos da V0.7.5.
 
 
-## V0.7.9 — recuperação da produção + agenda dos motoristas
+## V0.8.0 — Ensino e Aprendizagem • IDEB das Escolas
 
-Esta versão parte diretamente da V0.7.5, que foi testada no deployment da Vercel
-e comprovadamente abriu o Portal corretamente.
+Novo módulo:
+- Ensino e Aprendizagem passa a ter uma página de entrada com Visitas Técnicas e IDEB das Escolas.
+- IDEB separado por etapa: Ensino Médio e Anos Finais.
+- resultados de 2025 carregados a partir dos relatórios enviados;
+- série histórica transcrita dos gráficos de evolução desses relatórios;
+- média simples da GRE recalculada conforme as escolas selecionadas em cada edição;
+- composição da GRE é independente por etapa e ano;
+- ranking por maior/menor IDEB e evolução;
+- gráfico de evolução da média regional;
+- análise automática da edição;
+- tela individual de cada escola com histórico, aprendizado, fluxo, Português e Matemática;
+- perfil Visualização consulta os dados, mas não altera a composição;
+- Admin, Gerência e Coordenação podem definir a composição da GRE.
 
-O pacote NÃO possui:
-- rota `/motoristas`;
-- rewrite;
-- pasta externa envolvendo o site.
+Observação de base:
+- o arquivo FJC não foi incluído, pois o conteúdo recebido repete o relatório do CETI Desembargador Pedro Sá.
 
-Ao abrir o ZIP, `index.html` está diretamente na raiz.
-
-O acesso dos motoristas usa a própria página inicial:
-https://portal8gre-one.vercel.app/?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
-
-Assim, o Portal normal continua sendo:
-https://portal8gre-one.vercel.app
-
-e a mesma página, com a chave `?acesso=...`, abre somente a agenda dos motoristas.
-
-Foi adicionado `package.json` com `"type": "module"` para eliminar o warning
-de ESM/CommonJS da função `api/public-config.js`.
-
-Para ativar o acesso dos motoristas, execute `supabase/update-v079.sql`.
-É seguro executar este arquivo mesmo se `update-v076.sql` já tiver sido executado.
+Para ativar:
+1. execute `supabase/update-v080.sql`;
+2. publique os arquivos desta versão no mesmo repositório do Portal 8ª GRE;
+3. acesse Ensino e Aprendizagem → IDEB das Escolas;
+4. use “Definir escolas da GRE” para ajustar a composição de cada edição.

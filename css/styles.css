@@ -136,18 +136,41 @@ button:disabled{
 @media(max-width:1350px){.intro-cards{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){.intro-cards{grid-template-columns:1fr}}
 
-/* Agenda exclusiva dos motoristas — acesso somente leitura */
-.driver-view{min-height:100vh;background:#f4f7f6;color:var(--text)}
-.driver-header{height:74px;background:#fff;border-bottom:1px solid #dfe8e4;display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:20}
-.driver-brand{display:flex;align-items:center;gap:12px}.driver-logo{width:48px;height:48px}
-.driver-brand>div:last-child{display:flex;flex-direction:column}.driver-brand strong{font-size:1rem;color:#063f2b}.driver-brand span{font-size:.76rem;color:#697a74;margin-top:2px}
-.driver-refresh{border:1px solid #c8ddd4;background:#eef8f3;color:#075a3a;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}
-.driver-main{max-width:1320px;margin:0 auto;padding:28px 24px 52px}
-.driver-hero{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:18px}.driver-hero h1{margin:4px 0 6px;font-size:1.65rem}.driver-hero>div:first-child>p:last-child{margin:0;color:#66766f}
-.driver-updated{background:#eaf6f0;border:1px solid #cee6da;color:#306c50;border-radius:10px;padding:10px 13px;font-size:.76rem;font-weight:700;white-space:nowrap}
-.driver-calendar-card{padding:20px}.driver-calendar-day{font:inherit;text-align:left;color:inherit;border:0;background:#fff;cursor:pointer}.driver-calendar-day:hover{background:#f5faf7}.driver-calendar-day.today{box-shadow:inset 0 0 0 2px #0a774c}
-.driver-upcoming{margin-top:18px}.driver-upcoming-list{display:grid;gap:8px}.driver-upcoming-item{width:100%;display:grid;grid-template-columns:130px 1fr auto;gap:14px;align-items:center;text-align:left;padding:12px 14px;border:1px solid #e1e9e5;background:#fff;border-radius:12px;cursor:pointer}.driver-upcoming-item:hover{background:#f8fbfa;border-color:#cdded6}
-.driver-upcoming-date,.driver-upcoming-main{display:flex;flex-direction:column}.driver-upcoming-date span,.driver-upcoming-main span{font-size:.72rem;color:#718079;margin-top:3px}
-.driver-access-error{max-width:680px;margin:40px auto;background:#fff5e8;border:1px solid #ead1aa;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:6px;color:#765324}
-.driver-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:22px}.driver-modal.hidden{display:none}.driver-modal-backdrop{position:absolute;inset:0;background:rgba(16,33,25,.48);backdrop-filter:blur(3px)}.driver-modal-card{position:relative;z-index:1;width:min(900px,96vw);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;padding:26px;box-shadow:0 22px 70px rgba(0,0,0,.22)}
-@media(max-width:760px){.driver-header{height:auto;padding:12px 16px}.driver-main{padding:18px 10px 40px}.driver-hero{display:block}.driver-updated{display:inline-block;margin-top:12px}.driver-calendar-card{padding:10px}.driver-upcoming-item{grid-template-columns:100px 1fr}.driver-upcoming-item>.vehicle-chip{grid-column:2}.driver-modal{padding:8px}.driver-modal-card{padding:20px 14px}}
+
+/* =========================================================
+   IDEB DAS ESCOLAS — ENSINO E APRENDIZAGEM
+   ========================================================= */
+.ensino-module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.ensino-module-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:var(--shadow);display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start}
+.ensino-module-card .btn{grid-column:1/-1;justify-self:start}
+.ensino-module-icon{width:52px;height:52px;border-radius:14px;background:#ecf7ef;display:grid;place-items:center;font-size:1.45rem}
+.ideb-entry-card{background:linear-gradient(135deg,#f0faf2,#fff)}
+.ideb-btn{background:#08703f;color:#fff}.ideb-btn:hover{background:#075f37}.ideb-btn:disabled{opacity:.55;cursor:not-allowed}
+.ideb-banner{background:linear-gradient(120deg,#effaf2,#f9fffb)}
+.ideb-notice{display:flex;gap:12px;align-items:flex-start;border:1px solid #cfe5d7;background:#f1f9f4;border-radius:12px;padding:13px 16px;margin-bottom:16px;font-size:.78rem;color:#496158}
+.ideb-notice strong{color:#155e3a;white-space:nowrap}
+.ideb-filter-panel{margin-bottom:16px}
+.ideb-filter-row{display:flex;gap:10px;flex-wrap:wrap}
+.ideb-filter-row label{display:flex;flex-direction:column;gap:5px;font-size:.68rem;font-weight:800;color:#5c6b64}
+.ideb-filter-row select{min-width:160px;border:1px solid var(--border);border-radius:9px;background:#fff;padding:9px 10px;color:#26382f}
+.ideb-kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.ideb-kpi{background:#fff;border:1px solid var(--border);border-top:4px solid #82958c;border-radius:14px;padding:16px;box-shadow:var(--shadow);min-width:0}
+.ideb-kpi.primary{border-top-color:#08703f}.ideb-kpi.success{border-top-color:#21a366}.ideb-kpi.danger{border-top-color:#d85a4a}.ideb-kpi.evolution{border-top-color:#3979b7}
+.ideb-kpi small{display:block;color:#718078;font-size:.67rem;font-weight:800;line-height:1.3}.ideb-kpi strong{display:block;font-size:1.7rem;margin:7px 0 3px;color:#1d3127}.ideb-kpi span{display:block;color:#708078;font-size:.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ideb-dashboard-grid{display:grid;grid-template-columns:1.35fr .9fr;gap:16px;margin-bottom:16px}
+.ideb-chart{min-height:275px;display:grid;place-items:center;overflow:hidden}
+.ideb-svg{width:100%;height:auto;max-height:275px}
+.ideb-grid-line{stroke:#e4ece8;stroke-width:1}.ideb-axis-text{fill:#728078;font-size:11px}.ideb-chart-line{fill:none;stroke:#168153;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.ideb-chart-dot{fill:#fff;stroke:#168153;stroke-width:4}.ideb-chart-value{fill:#145d3c;font-size:12px;font-weight:800}
+.ideb-analysis{font-size:.82rem;line-height:1.55;color:#45564e}.ideb-analysis p{margin:0 0 11px}.ideb-analysis-badges{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.ideb-analysis-badges span,.ideb-evol{display:inline-flex;align-items:center;border-radius:999px;padding:5px 8px;font-size:.68rem;font-weight:800}.ideb-analysis-badges .up,.ideb-evol.up{background:#e7f6ed;color:#237349}.ideb-analysis-badges .down,.ideb-evol.down{background:#fcebe9;color:#a34339}.ideb-analysis-badges .stable,.ideb-evol.stable{background:#eef2f0;color:#617068}.ideb-evol.neutral{background:#f3f5f4;color:#7a8580}
+.ideb-table-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.ideb-table-tools input{min-width:280px}
+.ideb-table{min-width:1180px}.ideb-table .school-cell{min-width:260px}.ideb-score{font-size:1rem;color:#12633f}
+.ideb-row-excluded{opacity:.62;background:#fafbfa}
+.ideb-gre-status{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:.66rem;font-weight:800;white-space:nowrap}.ideb-gre-status.included{background:#e8f6ed;color:#247349}.ideb-gre-status.excluded{background:#f1f2f2;color:#6e7873}
+.ideb-composition>p{font-size:.82rem;line-height:1.5;color:#4e6057}.ideb-composition-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0}.ideb-composition-actions strong{margin-left:auto;font-size:.75rem;color:#315b46}
+.ideb-composition-list{border:1px solid var(--border);border-radius:12px;max-height:480px;overflow:auto}
+.ideb-check-row{display:flex;align-items:center;gap:12px;padding:11px 13px;border-bottom:1px solid #edf1ef;cursor:pointer}.ideb-check-row:last-child{border-bottom:0}.ideb-check-row:hover{background:#f7faf8}.ideb-check-row input{width:18px;height:18px;accent-color:#08703f}.ideb-check-row span{display:flex;flex-direction:column;gap:2px}.ideb-check-row strong{font-size:.78rem}.ideb-check-row small{font-size:.66rem;color:#75827c}
+.ideb-school-modal{display:grid;gap:16px}.ideb-school-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.ideb-school-summary>div,.ideb-component-grid>div{background:#f7faf8;border:1px solid #e1ebe6;border-radius:11px;padding:12px}.ideb-school-summary small,.ideb-component-grid small{display:block;font-size:.65rem;color:#738079;font-weight:800}.ideb-school-summary strong,.ideb-component-grid strong{display:block;font-size:1.25rem;margin:5px 0;color:#1c5638}.ideb-school-summary strong.text-value{font-size:.86rem}.ideb-school-summary span{font-size:.66rem;color:#76827c}
+.ideb-modal-chart{border:1px solid #e5ece8;border-radius:12px;padding:8px}.ideb-component-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.mini-history-table{min-width:520px}
+@media(max-width:1200px){.ideb-kpi-grid{grid-template-columns:repeat(3,1fr)}.ideb-dashboard-grid{grid-template-columns:1fr}.ideb-component-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:800px){.ensino-module-grid{grid-template-columns:1fr}.ideb-kpi-grid{grid-template-columns:repeat(2,1fr)}.ideb-filter-row{width:100%}.ideb-filter-row label{flex:1;min-width:140px}.ideb-table-tools input{min-width:0;width:100%}.ideb-school-summary{grid-template-columns:1fr}.ideb-component-grid{grid-template-columns:1fr 1fr}.ideb-notice{display:block}.ideb-notice strong{display:block;margin-bottom:5px}}
+@media(max-width:520px){.ideb-kpi-grid{grid-template-columns:1fr}.ideb-component-grid{grid-template-columns:1fr}}

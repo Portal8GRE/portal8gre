@@ -14,87 +14,6 @@
 <body>
   <div id="toast" class="toast" aria-live="polite"></div>
 
-
-  <section id="driverView" class="driver-view hidden">
-    <header class="driver-header">
-      <div class="driver-brand">
-        <div class="portal-logo driver-logo" aria-hidden="true">
-          <svg viewBox="0 0 96 82">
-            <path d="M8 19c14-8 28-7 40 3v49C36 61 22 59 8 66V19Z" fill="#eef8f3" stroke="#075a3a" stroke-width="2"/>
-            <path d="M88 19c-14-8-28-7-40 3v49c12-10 26-12 40-5V19Z" fill="#fff" stroke="#075a3a" stroke-width="2"/>
-            <path d="M48 22v49" stroke="#075a3a" stroke-width="3"/>
-            <circle cx="48" cy="14" r="6" fill="#f1b31c"/>
-            <circle cx="33" cy="13" r="5" fill="#1e5aa8"/>
-            <circle cx="63" cy="13" r="5" fill="#00875a"/>
-          </svg>
-        </div>
-        <div>
-          <strong>Portal 8ª GRE</strong>
-          <span>Agenda de Transporte</span>
-        </div>
-      </div>
-      <button id="driverRefreshBtn" class="driver-refresh" type="button">↻ Atualizar</button>
-    </header>
-
-    <main class="driver-main">
-      <section class="driver-hero">
-        <div>
-          <p class="eyebrow">Acesso dos Motoristas</p>
-          <h1>Calendário de Agendamentos</h1>
-          <p>Consulte os deslocamentos, horários, destinos e equipes programadas.</p>
-        </div>
-        <div id="driverUpdatedAt" class="driver-updated">Carregando agenda...</div>
-      </section>
-
-      <section id="driverAccessError" class="driver-access-error hidden">
-        <strong>Não foi possível abrir a agenda.</strong>
-        <span>Utilize o link fornecido pela 8ª GRE.</span>
-      </section>
-
-      <section id="driverCalendarArea" class="driver-calendar-card panel hidden">
-        <div class="calendar-head driver-calendar-head">
-          <div>
-            <p class="eyebrow">Agenda de Transporte</p>
-            <h2 id="driverMonthLabel">Mês</h2>
-            <p class="calendar-subtitle">Clique em uma data para visualizar os detalhes.</p>
-          </div>
-          <div class="calendar-legend">
-            <span><i class="calendar-dot calendar-s10"></i>S10</span>
-            <span><i class="calendar-dot calendar-logan"></i>Logan</span>
-            <span><i class="calendar-dot calendar-polo"></i>Polo</span>
-          </div>
-        </div>
-
-        <div class="calendar-shell">
-          <div class="calendar-toolbar">
-            <button id="driverPrevMonth" class="calendar-nav" type="button" aria-label="Mês anterior">‹</button>
-            <strong id="driverMonthToolbarLabel" class="calendar-month-label"></strong>
-            <button id="driverNextMonth" class="calendar-nav" type="button" aria-label="Próximo mês">›</button>
-          </div>
-          <div class="calendar-week"><span>DOM</span><span>SEG</span><span>TER</span><span>QUA</span><span>QUI</span><span>SEX</span><span>SÁB</span></div>
-          <div id="driverCalendar" class="transport-calendar"></div>
-        </div>
-      </section>
-
-      <section id="driverUpcoming" class="driver-upcoming panel hidden">
-        <div class="panel-header">
-          <div><p class="eyebrow">Próximos deslocamentos</p><h3>Agenda mais próxima</h3></div>
-        </div>
-        <div id="driverUpcomingList" class="driver-upcoming-list"></div>
-      </section>
-    </main>
-
-    <div id="driverModal" class="driver-modal hidden" role="dialog" aria-modal="true" aria-labelledby="driverModalTitle">
-      <div class="driver-modal-backdrop" data-close-driver-modal></div>
-      <div class="driver-modal-card">
-        <button class="modal-x" type="button" data-close-driver-modal aria-label="Fechar">×</button>
-        <p class="eyebrow">Agenda do dia</p>
-        <h2 id="driverModalTitle">Agendamentos</h2>
-        <div id="driverModalBody"></div>
-      </div>
-    </div>
-  </section>
-
   <section id="loginView" class="login-view">
     <div class="login-shell">
       <div class="login-brand-panel">
@@ -188,7 +107,7 @@
         <button class="nav-item home-nav active" data-view="dashboard" title="Início"><span>⌂</span><b>Início</b></button>
         <button class="nav-item" data-view="dashboard">Apresentação</button>
         <button class="nav-item" data-view="transporte">Gerência Regional</button>
-        <button class="nav-item" data-view="visitas">Ensino e Aprendizagem</button>
+        <button class="nav-item" data-view="ensino">Ensino e Aprendizagem</button>
         <button class="nav-item" data-view="gestao">Gestão e Inspeção</button>
         <button class="nav-item" data-view="administracao">Administração</button>
         <button class="nav-item" data-view="prestacao">Prestação de Contas</button>
@@ -267,8 +186,8 @@
 
           <article class="sector-card sector-green sector-wide">
             <div class="sector-head"><div class="sector-icon">📖</div><h3>Ensino e Aprendizagem</h3></div>
-            <div class="sector-columns"><ul><li>GdA</li><li>Gestão da Aprendizagem</li><li>EPT</li><li>AE</li><li>Educação Física</li></ul><ul><li>Programas e Projetos</li><li>Seduc Olímpica</li><li>Canal Educação</li><li>PEPAI</li></ul></div>
-            <button data-go="visitas" class="sector-btn">Acessar <span>→</span></button>
+            <div class="sector-columns"><ul><li>GdA</li><li>Gestão da Aprendizagem</li><li>IDEB das Escolas</li><li>EPT</li><li>AE</li></ul><ul><li>Educação Física</li><li>Programas e Projetos</li><li>Seduc Olímpica</li><li>Canal Educação</li><li>PEPAI</li></ul></div>
+            <button data-go="ensino" class="sector-btn">Acessar <span>→</span></button>
           </article>
 
           <article class="sector-card sector-teal">
@@ -356,6 +275,24 @@
         </article>
       </section>
 
+      <section id="ensino" class="view">
+        <div class="module-banner green-banner">
+          <div><p class="eyebrow">Ensino e Aprendizagem</p><h1>Ensino e Aprendizagem</h1><p>Acompanhamento pedagógico, visitas técnicas e indicadores educacionais das escolas da 8ª GRE.</p></div>
+        </div>
+        <div class="ensino-module-grid">
+          <article class="ensino-module-card">
+            <span class="ensino-module-icon">📍</span>
+            <div><p class="eyebrow">Acompanhamento</p><h3>Visitas Técnicas</h3><p>Registros das visitas realizadas às escolas e histórico de acompanhamento pedagógico.</p></div>
+            <button class="btn visits" type="button" data-go="visitas">Abrir visitas técnicas</button>
+          </article>
+          <article class="ensino-module-card ideb-entry-card">
+            <span class="ensino-module-icon">📊</span>
+            <div><p class="eyebrow">Indicadores</p><h3>IDEB das Escolas</h3><p>Resultados por etapa, evolução histórica e média das escolas que compõem a 8ª GRE em cada edição.</p></div>
+            <button class="btn ideb-btn" type="button" data-go="ideb">Abrir IDEB das escolas</button>
+          </article>
+        </div>
+      </section>
+
       <section id="visitas" class="view">
         <div class="module-banner green-banner">
           <div><p class="eyebrow">Ensino e Aprendizagem</p><h1>Visitas Técnicas</h1><p>Cada técnico registra suas visitas; coordenação e gerência acompanham todo o histórico.</p></div>
@@ -365,6 +302,80 @@
           <div class="panel-header wrap"><div><p class="eyebrow">Histórico</p><h3>Visitas registradas</h3></div><input id="visitSearch" placeholder="Buscar escola, técnico ou município" /></div>
           <div id="visitsList" class="card-list"></div>
           <div id="visitsEmpty" class="empty-block">Nenhuma visita registrada.</div>
+        </article>
+      </section>
+
+      <section id="ideb" class="view">
+        <div class="module-banner green-banner ideb-banner">
+          <div><p class="eyebrow">Ensino e Aprendizagem</p><h1>IDEB das Escolas</h1><p>Acompanhamento dos resultados, evolução histórica e composição das escolas consideradas no cálculo da 8ª GRE.</p></div>
+          <button id="editIdebCompositionBtn" class="btn ideb-btn" type="button">✓ Definir escolas da GRE</button>
+        </div>
+
+        <div id="idebNotice" class="ideb-notice">
+          <strong>Média simples das escolas selecionadas.</strong>
+          <span>A composição pode ser diferente em cada edição, respeitando quais escolas pertenciam à 8ª GRE no período da avaliação.</span>
+        </div>
+
+        <article class="panel ideb-filter-panel">
+          <div class="panel-header wrap">
+            <div><p class="eyebrow">Consulta</p><h3>Etapa e edição</h3></div>
+            <div class="ideb-filter-row">
+              <label>Etapa
+                <select id="idebStageFilter">
+                  <option value="Ensino Médio">Ensino Médio</option>
+                  <option value="Anos Finais">Anos Finais</option>
+                </select>
+              </label>
+              <label>Edição
+                <select id="idebYearFilter"></select>
+              </label>
+              <label>Ordenar
+                <select id="idebSort">
+                  <option value="ideb_desc">Maior IDEB</option>
+                  <option value="ideb_asc">Menor IDEB</option>
+                  <option value="evol_desc">Maior evolução</option>
+                  <option value="evol_asc">Maior queda</option>
+                  <option value="school_asc">Escola A–Z</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </article>
+
+        <div class="ideb-kpi-grid">
+          <article class="ideb-kpi primary"><small>Média das escolas selecionadas</small><strong id="idebKpiAverage">—</strong><span id="idebKpiAverageNote">IDEB</span></article>
+          <article class="ideb-kpi"><small>Escolas consideradas</small><strong id="idebKpiSchools">—</strong><span id="idebKpiSchoolsNote">na composição da GRE</span></article>
+          <article class="ideb-kpi success"><small>Maior IDEB</small><strong id="idebKpiMax">—</strong><span id="idebKpiMaxSchool">—</span></article>
+          <article class="ideb-kpi danger"><small>Menor IDEB</small><strong id="idebKpiMin">—</strong><span id="idebKpiMinSchool">—</span></article>
+          <article class="ideb-kpi evolution"><small>Evolução da GRE</small><strong id="idebKpiEvolution">—</strong><span id="idebKpiEvolutionNote">em relação à edição anterior</span></article>
+        </div>
+
+        <div class="ideb-dashboard-grid">
+          <article class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Evolução</p><h3>Média da 8ª GRE por edição</h3></div></div>
+            <div id="idebGreChart" class="ideb-chart"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Leitura dos resultados</p><h3>Análise da edição</h3></div></div>
+            <div id="idebAnalysis" class="ideb-analysis">Selecione uma etapa e uma edição.</div>
+          </article>
+        </div>
+
+        <article class="panel">
+          <div class="panel-header wrap">
+            <div><p class="eyebrow">Escolas</p><h3>Resultados da edição</h3></div>
+            <div class="ideb-table-tools">
+              <input id="idebSearch" placeholder="Buscar escola ou município" />
+              <span id="idebResultCount" class="result-count">0 escolas</span>
+            </div>
+          </div>
+          <div class="table-wrap ideb-table-wrap">
+            <table class="ideb-table">
+              <thead><tr><th>Escola</th><th>Município</th><th>IDEB</th><th>Edição anterior</th><th>Evolução</th><th>Aprendizado</th><th>Fluxo</th><th>GRE</th><th></th></tr></thead>
+              <tbody id="idebTable"></tbody>
+            </table>
+          </div>
+          <div id="idebEmpty" class="empty-block hidden">Nenhum resultado encontrado.</div>
         </article>
       </section>
 
@@ -500,7 +511,7 @@
   </dialog>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="js/store.js?v=0.7.9"></script>
-  <script src="js/app.js?v=0.7.9"></script>
+  <script src="js/store.js?v=0.8.0"></script>
+  <script src="js/app.js?v=0.8.0"></script>
 </body>
 </html>

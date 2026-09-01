@@ -2,13 +2,10 @@
   const $ = s => document.querySelector(s);
   const $$ = s => [...document.querySelectorAll(s)];
   const store = window.PortalStore;
-  const state = { user: null, schools: [], transport: [], visits: [], management: [], profiles: [], sectors: [], classReports: [], classItems: [], teacherMappings: [], activeClassReportId: null, aulasModuleReady: true };
+  const state = { user: null, schools: [], transport: [], visits: [], management: [], profiles: [], sectors: [], classReports: [], classItems: [], teacherMappings: [], activeClassReportId: null, aulasModuleReady: true, idebResults: [], idebComposition: [], idebModuleReady: true };
   const roleLabels = { admin:'Administrador', gerencia:'Gerência Regional', coordenacao:'Coordenação', tecnico:'Técnico da GRE', visualizacao:'Visualização', escola:'Escola' };
-  const titles = { dashboard:'Apresentação', transporte:'Gerência Regional • Transporte', visitas:'Ensino e Aprendizagem • Visitas', gestao:'Gestão e Inspeção • Acompanhamento Escolar', administracao:'Administração', prestacao:'Prestação de Contas', escolas:'Escolas', usuarios:'Usuários e Permissões', aulas:'Gestão e Inspeção • Acompanhamento de Aulas' };
+  const titles = { dashboard:'Apresentação', transporte:'Gerência Regional • Transporte', ensino:'Ensino e Aprendizagem', visitas:'Ensino e Aprendizagem • Visitas', ideb:'Ensino e Aprendizagem • IDEB das Escolas', gestao:'Gestão e Inspeção • Acompanhamento Escolar', administracao:'Administração', prestacao:'Prestação de Contas', escolas:'Escolas', usuarios:'Usuários e Permissões', aulas:'Gestão e Inspeção • Acompanhamento de Aulas' };
   let transportCalendarDate = new Date();
-  let driverCalendarDate = new Date();
-  let driverTransport = [];
-  let driverAccessKey = '';
   const transportMonthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
   function toast(message) {
@@ -29,6 +26,7 @@
   function canEditTransport(){ return canManageTransport(); }
   function canChangeTransportStatus(){ return canManageTransport(); }
   function canManageAulas(){ return ['admin','gerencia','coordenacao'].includes(state.user?.role); }
+  function canManageIdeb(){ return ['admin','gerencia','coordenacao'].includes(state.user?.role); }
   function isReadOnly(){ return state.user?.role === 'visualizacao'; }
   function canWriteOperational(){ return ['admin','gerencia','coordenacao','tecnico'].includes(state.user?.role); }
 
@@ -38,6 +36,15 @@
       Object.assign(state,{schools,transport,visits,management});
       if (isExecutive()) state.profiles=await store.listProfiles(); else state.profiles=[];
       if (isManager()) state.sectors=await store.listSectors(); else state.sectors=[];
+      try{
+        const [idebResults,idebComposition]=await Promise.all([store.listIdebResults(),store.listIdebComposition()]);
+        state.idebResults=idebResults;
+        state.idebComposition=idebComposition;
+        state.idebModuleReady=true;
+      }catch(idebErr){
+        console.warn('Módulo IDEB ainda não inicializado:',idebErr);
+        state.idebResults=[]; state.idebComposition=[]; state.idebModuleReady=false;
+      }
       try{
         state.classReports=await store.listClassReports();
         if(!state.activeClassReportId && state.classReports.length) state.activeClassReportId=state.classReports[0].id;
@@ -65,6 +72,7 @@
     const schoolBtn=$('#newSchoolBtn'); if(schoolBtn) schoolBtn.classList.toggle('hidden', !isManager());
     const transportBtn=$('#newTransportBtn'); if(transportBtn) transportBtn.classList.toggle('hidden', !canManageTransport());
     const aulasBtn=$('#newAulasReportBtn'); if(aulasBtn) aulasBtn.classList.toggle('hidden', !canManageAulas());
+    const idebBtn=$('#editIdebCompositionBtn'); if(idebBtn) idebBtn.classList.toggle('hidden', !canManageIdeb());
     const visitBtn=$('#newVisitBtn'); if(visitBtn) visitBtn.classList.toggle('hidden', !canWriteOperational());
     const managementBtn=$('#newManagementBtn'); if(managementBtn) managementBtn.classList.toggle('hidden', !canWriteOperational());
     setText('#dashboardUserName', user.name || 'Usuário');
@@ -72,19 +80,9 @@
     setText('#dashboardAvatar', (user.name || 'U').trim()[0].toUpperCase());
   }
 
-  function isDriverAccess(){
-    return new URLSearchParams(location.search).has('acesso');
-  }
-
   async function boot(){
     const config = await store.init();
     updateConnectionUi(config);
-
-    if(isDriverAccess()){
-      await showDriverAccess();
-      return;
-    }
-
     const user = await store.currentSession();
     if (user) await showApp(user); else showLogin();
   }
@@ -93,80 +91,6 @@
 
   function showLogin(){ $('#loginView')?.classList.remove('hidden'); $('#appView')?.classList.add('hidden'); }
   async function showApp(user){ $('#loginView')?.classList.add('hidden'); $('#appView')?.classList.remove('hidden'); setUser(user); await loadData(); navigate('dashboard'); }
-
-  function driverVehicleClass(vehicle){ return vehicle==='S10'?'s10':vehicle==='Logan'?'logan':'polo'; }
-  function driverFmtTime(v){ return String(v||'').slice(0,5)||'—'; }
-
-  async function showDriverAccess(){
-    $('#loginView')?.classList.add('hidden');
-    $('#appView')?.classList.add('hidden');
-    $('#driverView')?.classList.remove('hidden');
-    driverAccessKey=new URLSearchParams(location.search).get('acesso')||'';
-    await loadDriverTransport();
-  }
-
-  async function loadDriverTransport(){
-    const area=$('#driverCalendarArea'), upcoming=$('#driverUpcoming'), error=$('#driverAccessError'), refresh=$('#driverRefreshBtn');
-    try{
-      if(refresh){refresh.disabled=true;refresh.textContent='↻ Atualizando...';}
-      error?.classList.add('hidden');
-      driverTransport=await store.listPublicTransport(driverAccessKey);
-      area?.classList.remove('hidden');
-      upcoming?.classList.remove('hidden');
-      setText('#driverUpdatedAt',`Atualizado em ${new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}`);
-      renderDriverCalendar();
-      renderDriverUpcoming();
-    }catch(err){
-      console.error(err);
-      driverTransport=[];
-      area?.classList.add('hidden');
-      upcoming?.classList.add('hidden');
-      error?.classList.remove('hidden');
-      setText('#driverUpdatedAt','');
-    }finally{
-      if(refresh){refresh.disabled=false;refresh.textContent='↻ Atualizar';}
-    }
-  }
-
-  function renderDriverCalendar(){
-    const grid=$('#driverCalendar'), month=$('#driverMonthLabel'), toolbar=$('#driverMonthToolbarLabel');
-    if(!grid)return;
-    const y=driverCalendarDate.getFullYear(),m=driverCalendarDate.getMonth();
-    const label=`${transportMonthNames[m]} de ${y}`;
-    if(month)month.textContent=label;
-    if(toolbar)toolbar.textContent=label;
-    const first=new Date(y,m,1),last=new Date(y,m+1,0),cells=[];
-    for(let i=0;i<first.getDay();i++)cells.push('<div class="calendar-day outside"></div>');
-
-    for(let d=1;d<=last.getDate();d++){
-      const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const events=driverTransport.filter(x=>String(x.data||'').slice(0,10)===key&&x.status!=='Cancelado').sort((a,b)=>String(a.hora_saida||'').localeCompare(String(b.hora_saida||'')));
-      const shown=events.slice(0,3).map(x=>`<div class="calendar-event ${driverVehicleClass(x.veiculo)}">${esc(x.veiculo)} • ${esc(x.destino||x.escola_nome||'Destino')}</div>`).join('');
-      const more=events.length>3?`<div class="calendar-more">+${events.length-3} agendamento(s)</div>`:'';
-      const today=new Date(),isToday=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
-      cells.push(`<button type="button" class="calendar-day driver-calendar-day ${events.length?'has-events':''} ${isToday?'today':''}" data-driver-date="${key}"><span class="calendar-number">${d}</span><div class="calendar-events">${shown}${more}</div></button>`);
-    }
-    grid.innerHTML=cells.join('');
-  }
-
-  function renderDriverUpcoming(){
-    const el=$('#driverUpcomingList');if(!el)return;
-    const now=new Date();now.setHours(0,0,0,0);
-    const todayKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-    const rows=[...driverTransport].filter(x=>x.status!=='Cancelado'&&String(x.data||'').slice(0,10)>=todayKey).sort((a,b)=>`${a.data||''}${a.hora_saida||''}`.localeCompare(`${b.data||''}${b.hora_saida||''}`)).slice(0,8);
-    el.innerHTML=rows.length?rows.map(x=>`<button class="driver-upcoming-item" type="button" data-driver-date="${esc(String(x.data||'').slice(0,10))}"><div class="driver-upcoming-date"><strong>${esc(fmtDate(x.data))}</strong><span>${esc(driverFmtTime(x.hora_saida))}</span></div><div class="driver-upcoming-main"><strong>${esc(x.destino||x.escola_nome||'Destino')}</strong><span>${esc(x.finalidade||'Deslocamento')}</span></div><span class="vehicle-chip ${driverVehicleClass(x.veiculo)}">${esc(x.veiculo||'—')}</span></button>`).join(''):'<div class="calendar-empty-day">Nenhum deslocamento futuro registrado.</div>';
-  }
-
-  function openDriverDay(key){
-    const list=driverTransport.filter(x=>x.status!=='Cancelado'&&String(x.data||'').slice(0,10)===key).sort((a,b)=>String(a.hora_saida||'').localeCompare(String(b.hora_saida||'')));
-    const [y,m,d]=key.split('-').map(Number);
-    setText('#driverModalTitle',`${String(d).padStart(2,'0')} de ${transportMonthNames[m-1]} de ${y}`);
-    const body=$('#driverModalBody');if(!body)return;
-    body.innerHTML=list.length?`<div class="day-bookings">${list.map(x=>`<article class="day-booking driver-day-booking"><div class="day-booking-head"><div><p class="eyebrow">${esc(x.status||'Confirmado')}</p><h3>${esc(x.finalidade||'Deslocamento')}</h3></div><span class="vehicle-chip ${driverVehicleClass(x.veiculo)}">${esc(x.veiculo||'—')}</span></div><div class="booking-detail-grid"><div class="booking-detail"><small>Escola / destino</small><strong>${esc(x.escola_nome||x.destino||'—')}</strong></div><div class="booking-detail"><small>Destino</small><strong>${esc(x.destino||'—')}</strong></div><div class="booking-detail"><small>Responsável</small><strong>${esc(x.responsavel||'—')}</strong></div><div class="booking-detail"><small>Quem irá</small><strong>${esc(x.participantes||'—')}</strong></div><div class="booking-detail"><small>Saída</small><strong>${esc(driverFmtTime(x.hora_saida))}</strong></div><div class="booking-detail"><small>Retorno previsto</small><strong>${esc(driverFmtTime(x.previsao_retorno))}</strong></div></div></article>`).join('')}</div>`:'<div class="calendar-empty-day">Nenhum transporte agendado para esta data.</div>';
-    $('#driverModal')?.classList.remove('hidden');
-  }
-
-  function closeDriverModal(){ $('#driverModal')?.classList.add('hidden'); }
 
   function navigate(view){
     if(view==='usuarios' && !isExecutive()){ toast('Apenas Gerência e Administrador podem gerenciar usuários.'); return; }
@@ -178,7 +102,7 @@
     $('.sidebar')?.classList.remove('open');
   }
 
-  function renderAll(){ renderStats(); renderDashboardLists(); renderSchools(); renderTransport(); renderVisits(); renderManagement(); renderUsers(); renderAulas(); }
+  function renderAll(){ renderStats(); renderDashboardLists(); renderSchools(); renderTransport(); renderVisits(); renderManagement(); renderUsers(); renderAulas(); renderIdeb(); }
   function renderStats(){
     setText('#statTransport', state.transport.filter(x=>x.status!=='Cancelado').length);
     setText('#statVisits', state.visits.length);
@@ -198,6 +122,286 @@
   function schoolOptions(selected=''){ return `<option value="">Selecione</option>` + state.schools.filter(s=>s.ativo!==false).map(s=>`<option value="${esc(s.id)}" ${s.id===selected?'selected':''}>${esc(s.nome)} — ${esc(s.municipio||'')}</option>`).join(''); }
   function sectorOptions(selected=''){ return `<option value="">Sem setor vinculado</option>` + state.sectors.map(s=>`<option value="${esc(s.id)}" ${s.id===selected?'selected':''}>${esc(s.nome)}</option>`).join(''); }
 
+
+
+  function idebCompositionMap(){
+    return new Map(state.idebComposition.map(x=>[x.resultado_id,x.incluida!==false]));
+  }
+
+  function idebIncluded(row){
+    const map=idebCompositionMap();
+    return map.has(row.id) ? map.get(row.id) : true;
+  }
+
+  function idebRows(stage=null,year=null){
+    return state.idebResults.filter(r=>(!stage||r.etapa===stage)&&(!year||Number(r.ano)===Number(year)));
+  }
+
+  function idebYears(stage){
+    return [...new Set(idebRows(stage).map(r=>Number(r.ano)))].sort((a,b)=>b-a);
+  }
+
+  function idebPrevious(row){
+    return state.idebResults
+      .filter(r=>r.escola_nome===row.escola_nome && r.etapa===row.etapa && Number(r.ano)<Number(row.ano))
+      .sort((a,b)=>Number(b.ano)-Number(a.ano))[0] || null;
+  }
+
+  function fmtIdeb(v){
+    const n=Number(v);
+    return Number.isFinite(n)?n.toFixed(1).replace('.',','):'—';
+  }
+
+  function fmtSigned(v){
+    const n=Number(v);
+    if(!Number.isFinite(n)) return '—';
+    return `${n>0?'+':''}${n.toFixed(1).replace('.',',')}`;
+  }
+
+  function idebEvolutionClass(v){
+    if(v===null || v===undefined || !Number.isFinite(Number(v))) return 'neutral';
+    return Number(v)>0.05?'up':Number(v)<-0.05?'down':'stable';
+  }
+
+  function idebAverage(rows){
+    const vals=rows.map(r=>Number(r.ideb)).filter(Number.isFinite);
+    return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+  }
+
+  function idebRegionalSeries(stage){
+    const years=[...new Set(idebRows(stage).map(r=>Number(r.ano)))].sort((a,b)=>a-b);
+    return years.map(ano=>{
+      const rows=idebRows(stage,ano).filter(idebIncluded);
+      return {ano,valor:idebAverage(rows),n:rows.length};
+    }).filter(x=>x.valor!==null);
+  }
+
+  function idebLineSvg(points,opts={}){
+    if(!points.length) return '<div class="empty-block">Sem histórico para exibir.</div>';
+    const W=680,H=250,padL=44,padR=24,padT=22,padB=42;
+    const vals=points.map(p=>Number(p.valor));
+    let min=Math.min(...vals),max=Math.max(...vals);
+    min=Math.max(0,Math.floor((min-.5)*2)/2);
+    max=Math.min(10,Math.ceil((max+.5)*2)/2);
+    if(max-min<1){min=Math.max(0,min-.5);max=Math.min(10,max+.5);}
+    const x=i=>points.length===1?W/2:padL+i*(W-padL-padR)/(points.length-1);
+    const y=v=>padT+(max-v)*(H-padT-padB)/(max-min||1);
+    const poly=points.map((p,i)=>`${x(i)},${y(p.valor)}`).join(' ');
+    const grids=Array.from({length:5},(_,i)=>{
+      const val=min+(max-min)*i/4;
+      return `<line x1="${padL}" y1="${y(val)}" x2="${W-padR}" y2="${y(val)}" class="ideb-grid-line"/><text x="${padL-8}" y="${y(val)+4}" text-anchor="end" class="ideb-axis-text">${val.toFixed(1).replace('.',',')}</text>`;
+    }).join('');
+    const labels=points.map((p,i)=>`<text x="${x(i)}" y="${H-14}" text-anchor="middle" class="ideb-axis-text">${p.ano}</text>`).join('');
+    const dots=points.map((p,i)=>`<g><circle cx="${x(i)}" cy="${y(p.valor)}" r="5" class="ideb-chart-dot"/><text x="${x(i)}" y="${y(p.valor)-10}" text-anchor="middle" class="ideb-chart-value">${fmtIdeb(p.valor)}</text></g>`).join('');
+    return `<svg viewBox="0 0 ${W} ${H}" class="ideb-svg" role="img" aria-label="${esc(opts.label||'Evolução do IDEB')}">${grids}<polyline points="${poly}" class="ideb-chart-line"/>${dots}${labels}</svg>`;
+  }
+
+  function syncIdebFilters(){
+    const stage=$('#idebStageFilter')?.value||'Ensino Médio';
+    const years=idebYears(stage);
+    const yearEl=$('#idebYearFilter');
+    if(!yearEl) return;
+    const current=Number(yearEl.value)||years[0];
+    yearEl.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join('');
+    yearEl.value=years.includes(current)?String(current):String(years[0]||2025);
+  }
+
+  function renderIdeb(){
+    const table=$('#idebTable');
+    if(!table) return;
+
+    const manageBtn=$('#editIdebCompositionBtn');
+    if(manageBtn) manageBtn.classList.toggle('hidden',!canManageIdeb());
+
+    if(!state.idebModuleReady){
+      $('#idebNotice').innerHTML='<strong>Módulo temporariamente indisponível.</strong><span>Procure a administração do Portal 8ª GRE.</span>';
+      table.innerHTML='';
+      return;
+    }
+
+    syncIdebFilters();
+
+    const stage=$('#idebStageFilter')?.value||'Ensino Médio';
+    const year=Number($('#idebYearFilter')?.value)||idebYears(stage)[0]||2025;
+    const sort=$('#idebSort')?.value||'ideb_desc';
+    const q=($('#idebSearch')?.value||'').trim().toLocaleLowerCase('pt-BR');
+
+    const allRows=idebRows(stage,year);
+    const included=allRows.filter(idebIncluded);
+    const avg=idebAverage(included);
+    const sortedIncluded=[...included].sort((a,b)=>Number(b.ideb)-Number(a.ideb));
+    const maxRow=sortedIncluded[0]||null;
+    const minRow=sortedIncluded.at(-1)||null;
+
+    const series=idebRegionalSeries(stage);
+    const seriesIndex=series.findIndex(x=>x.ano===year);
+    const currentPoint=series[seriesIndex]||null;
+    const previousPoint=seriesIndex>0?series[seriesIndex-1]:null;
+    const greEvolution=currentPoint&&previousPoint?currentPoint.valor-previousPoint.valor:null;
+
+    setText('#idebKpiAverage',avg===null?'—':fmtIdeb(avg));
+    setText('#idebKpiAverageNote',`${stage} • ${year}`);
+    setText('#idebKpiSchools',included.length);
+    setText('#idebKpiSchoolsNote',`${allRows.length} escola(s) com resultado`);
+    setText('#idebKpiMax',maxRow?fmtIdeb(maxRow.ideb):'—');
+    setText('#idebKpiMaxSchool',maxRow?.escola_nome||'—');
+    setText('#idebKpiMin',minRow?fmtIdeb(minRow.ideb):'—');
+    setText('#idebKpiMinSchool',minRow?.escola_nome||'—');
+    setText('#idebKpiEvolution',greEvolution===null?'—':fmtSigned(greEvolution));
+    setText('#idebKpiEvolutionNote',previousPoint?`${previousPoint.ano} → ${year}`:'Sem edição anterior consolidada');
+
+    const chart=$('#idebGreChart');
+    if(chart) chart.innerHTML=idebLineSvg(series,{label:`Média IDEB da 8ª GRE - ${stage}`});
+
+    const schoolEvolution=included.map(r=>{
+      const prev=idebPrevious(r);
+      return {r,prev,evol:prev?Number(r.ideb)-Number(prev.ideb):null};
+    });
+    const advances=schoolEvolution.filter(x=>x.evol!==null&&x.evol>.05).length;
+    const drops=schoolEvolution.filter(x=>x.evol!==null&&x.evol<-.05).length;
+    const stable=schoolEvolution.filter(x=>x.evol!==null&&Math.abs(x.evol)<=.05).length;
+    const avgLearning=idebAverage(included.filter(r=>r.aprendizado!==null).map(r=>({ideb:r.aprendizado})));
+    const avgFlow=idebAverage(included.filter(r=>r.fluxo!==null).map(r=>({ideb:r.fluxo})));
+
+    const analysis=$('#idebAnalysis');
+    if(analysis){
+      analysis.innerHTML=included.length?`
+        <p>Na edição <strong>${year}</strong>, a média simples das <strong>${included.length}</strong> escolas selecionadas em <strong>${esc(stage)}</strong> é <strong>${fmtIdeb(avg)}</strong>.</p>
+        ${previousPoint?`<p>Em relação a <strong>${previousPoint.ano}</strong>, a média regional ${greEvolution>0?'aumentou':greEvolution<0?'diminuiu':'permaneceu estável'} em <strong>${fmtSigned(greEvolution)}</strong> ponto(s).</p>`:''}
+        <div class="ideb-analysis-badges">
+          <span class="up">↑ ${advances} avançaram</span>
+          <span class="stable">→ ${stable} mantiveram</span>
+          <span class="down">↓ ${drops} recuaram</span>
+        </div>
+        ${year===2025&&avgLearning!==null?`<p>Nos componentes de 2025, o aprendizado médio é <strong>${avgLearning.toFixed(2).replace('.',',')}</strong> e o fluxo médio é <strong>${avgFlow.toFixed(2).replace('.',',')}</strong>.</p>`:''}
+        <p class="hint">A composição utilizada no cálculo pode ser ajustada para cada edição.</p>
+      `:'<div class="empty-block">Nenhuma escola selecionada para esta edição.</div>';
+    }
+
+    let display=allRows.filter(r=>!q||[r.escola_nome,r.municipio].some(v=>String(v||'').toLocaleLowerCase('pt-BR').includes(q)));
+    display=display.map(r=>{
+      const prev=idebPrevious(r);
+      return {...r,_prev:prev,_evol:prev?Number(r.ideb)-Number(prev.ideb):null};
+    }).sort((a,b)=>{
+      if(sort==='ideb_asc') return Number(a.ideb)-Number(b.ideb);
+      if(sort==='evol_desc') return (b._evol??-99)-(a._evol??-99);
+      if(sort==='evol_asc') return (a._evol??99)-(b._evol??99);
+      if(sort==='school_asc') return String(a.escola_nome).localeCompare(String(b.escola_nome),'pt-BR');
+      return Number(b.ideb)-Number(a.ideb);
+    });
+
+    setText('#idebResultCount',`${display.length} escola${display.length===1?'':'s'}`);
+    $('#idebEmpty')?.classList.toggle('hidden',display.length>0);
+
+    table.innerHTML=display.map(r=>{
+      const includedNow=idebIncluded(r);
+      const cls=idebEvolutionClass(r._evol);
+      return `<tr class="${includedNow?'':'ideb-row-excluded'}">
+        <td class="school-cell"><strong>${esc(r.escola_nome)}</strong></td>
+        <td>${esc(r.municipio||'—')}</td>
+        <td><strong class="ideb-score">${fmtIdeb(r.ideb)}</strong></td>
+        <td>${r._prev?`${r._prev.ano}: ${fmtIdeb(r._prev.ideb)}`:'—'}</td>
+        <td><span class="ideb-evol ${cls}">${r._evol===null?'—':fmtSigned(r._evol)}</span></td>
+        <td>${r.aprendizado!==null&&r.aprendizado!==undefined?Number(r.aprendizado).toFixed(2).replace('.',','):'—'}</td>
+        <td>${r.fluxo!==null&&r.fluxo!==undefined?Number(r.fluxo).toFixed(2).replace('.',','):'—'}</td>
+        <td><span class="ideb-gre-status ${includedNow?'included':'excluded'}">${includedNow?'Considerada':'Fora do cálculo'}</span></td>
+        <td><button class="action-btn" type="button" data-ideb-school="${esc(r.id)}">Analisar</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openIdebSchool(rowId){
+    const row=state.idebResults.find(r=>r.id===rowId);
+    if(!row) return;
+    const hist=state.idebResults
+      .filter(r=>r.escola_nome===row.escola_nome&&r.etapa===row.etapa)
+      .sort((a,b)=>Number(a.ano)-Number(b.ano));
+    const current=hist.find(r=>Number(r.ano)===2025)||hist.at(-1);
+    const points=hist.map(r=>({ano:Number(r.ano),valor:Number(r.ideb)}));
+    const first=hist[0],last=hist.at(-1),accum=first&&last?Number(last.ideb)-Number(first.ideb):null;
+
+    openModal(
+      row.escola_nome,
+      `${row.etapa} • Evolução do IDEB`,
+      `<div class="ideb-school-modal">
+        <div class="ideb-school-summary">
+          <div><small>Último IDEB</small><strong>${fmtIdeb(last?.ideb)}</strong><span>${last?.ano||''}</span></div>
+          <div><small>Evolução acumulada</small><strong class="${idebEvolutionClass(accum)}">${accum===null?'—':fmtSigned(accum)}</strong><span>${first?.ano||''} → ${last?.ano||''}</span></div>
+          <div><small>Município</small><strong class="text-value">${esc(row.municipio||'—')}</strong><span>${esc(row.etapa)}</span></div>
+        </div>
+        <div class="ideb-modal-chart">${idebLineSvg(points,{label:`Evolução do IDEB - ${row.escola_nome}`})}</div>
+        ${current&&Number(current.ano)===2025?`
+          <div class="ideb-component-grid">
+            <div><small>Aprendizado 2025</small><strong>${Number(current.aprendizado).toFixed(2).replace('.',',')}</strong></div>
+            <div><small>Fluxo 2025</small><strong>${Number(current.fluxo).toFixed(2).replace('.',',')}</strong></div>
+            <div><small>Português</small><strong>${Number(current.portugues).toFixed(2).replace('.',',')}</strong></div>
+            <div><small>Matemática</small><strong>${Number(current.matematica).toFixed(2).replace('.',',')}</strong></div>
+          </div>
+        `:''}
+        <div class="table-wrap"><table class="mini-history-table"><thead><tr><th>Edição</th><th>IDEB</th><th>GRE</th></tr></thead><tbody>
+          ${[...hist].reverse().map(r=>`<tr><td>${r.ano}</td><td><strong>${fmtIdeb(r.ideb)}</strong></td><td>${idebIncluded(r)?'Considerada':'Fora do cálculo'}</td></tr>`).join('')}
+        </tbody></table></div>
+        <p class="hint">Fonte: relatórios IDEB/INEP enviados à 8ª GRE.</p>
+        <div class="modal-actions"><button type="button" data-close class="btn primary">Fechar</button></div>
+      </div>`
+    );
+  }
+
+  function openIdebComposition(){
+    if(!canManageIdeb()){ toast('Seu perfil possui acesso somente para consulta.'); return; }
+    const stage=$('#idebStageFilter')?.value||'Ensino Médio';
+    const year=Number($('#idebYearFilter')?.value)||2025;
+    const rows=idebRows(stage,year).sort((a,b)=>String(a.escola_nome).localeCompare(String(b.escola_nome),'pt-BR'));
+
+    openModal(
+      'Definir escolas da GRE',
+      `${stage} • IDEB ${year}`,
+      `<div class="ideb-composition">
+        <p>Marque somente as escolas que pertenciam à <strong>8ª GRE</strong> no período da avaliação desta edição. Essa seleção será usada na média e nos indicadores regionais.</p>
+        <div class="ideb-composition-actions">
+          <button id="idebSelectAll" type="button" class="btn secondary small">Selecionar todas</button>
+          <button id="idebClearAll" type="button" class="btn secondary small">Limpar seleção</button>
+          <strong id="idebCompositionCount"></strong>
+        </div>
+        <div class="ideb-composition-list">
+          ${rows.map(r=>`<label class="ideb-check-row"><input type="checkbox" data-ideb-composition="${esc(r.id)}" ${idebIncluded(r)?'checked':''}><span><strong>${esc(r.escola_nome)}</strong><small>${esc(r.municipio||'')} • IDEB ${fmtIdeb(r.ideb)}</small></span></label>`).join('')}
+        </div>
+        <div class="modal-actions">
+          <button type="button" data-close class="btn secondary">Cancelar</button>
+          <button id="saveIdebCompositionBtn" type="button" class="btn ideb-btn">Salvar composição da GRE</button>
+        </div>
+      </div>`
+    );
+    updateIdebCompositionCount();
+  }
+
+  function updateIdebCompositionCount(){
+    const checks=$$('[data-ideb-composition]');
+    const selected=checks.filter(c=>c.checked).length;
+    setText('#idebCompositionCount',`${selected} de ${checks.length} selecionadas`);
+  }
+
+  async function saveIdebComposition(){
+    const checks=$$('[data-ideb-composition]');
+    if(!checks.length) return;
+    const btn=$('#saveIdebCompositionBtn');
+    try{
+      if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+      const items=checks.map(c=>({resultado_id:c.dataset.idebComposition,incluida:c.checked}));
+      const saved=await store.saveIdebComposition(items);
+      const map=new Map(saved.map(x=>[x.resultado_id,x]));
+      state.idebComposition=state.idebComposition.filter(x=>!map.has(x.resultado_id));
+      state.idebComposition.push(...saved);
+      closeModal();
+      renderIdeb();
+      toast('Composição da GRE atualizada.');
+    }catch(err){
+      console.error(err);
+      toast('Não foi possível salvar a composição.');
+    }finally{
+      if(btn&&document.body.contains(btn)){btn.disabled=false;btn.textContent='Salvar composição da GRE';}
+    }
+  }
 
   const AULAS_CALENDAR = {
     '2026/1':{start:'2026-02-19',end:'2026-07-11'},
@@ -950,11 +1154,11 @@
   }
 
   document.addEventListener('click', async e=>{
-    if(e.target.id==='driverRefreshBtn'){ await loadDriverTransport(); return; }
-    if(e.target.id==='driverPrevMonth'){ driverCalendarDate=new Date(driverCalendarDate.getFullYear(),driverCalendarDate.getMonth()-1,1); renderDriverCalendar(); return; }
-    if(e.target.id==='driverNextMonth'){ driverCalendarDate=new Date(driverCalendarDate.getFullYear(),driverCalendarDate.getMonth()+1,1); renderDriverCalendar(); return; }
-    const driverDate=e.target.closest('[data-driver-date]'); if(driverDate){ openDriverDay(driverDate.dataset.driverDate); return; }
-    if(e.target.closest('[data-close-driver-modal]')){ closeDriverModal(); return; }
+    if(e.target.id==='editIdebCompositionBtn'){ openIdebComposition(); return; }
+    if(e.target.id==='idebSelectAll'){ $$('[data-ideb-composition]').forEach(c=>c.checked=true); updateIdebCompositionCount(); return; }
+    if(e.target.id==='idebClearAll'){ $$('[data-ideb-composition]').forEach(c=>c.checked=false); updateIdebCompositionCount(); return; }
+    if(e.target.id==='saveIdebCompositionBtn'){ await saveIdebComposition(); return; }
+    const idebSchool=e.target.closest('[data-ideb-school]'); if(idebSchool){ openIdebSchool(idebSchool.dataset.idebSchool); return; }
     const saveProfile=e.target.closest('[data-save-profile]');
     if(saveProfile){
       e.preventDefault();
@@ -1022,5 +1226,11 @@
   document.addEventListener('change', e=>{
     if(e.target.closest('#transportForm') && ['data','escola_id','destino','hora_saida','previsao_retorno'].includes(e.target.name)) refreshTransportSharingAlert();
   });
+  $('#idebStageFilter')?.addEventListener('change',()=>{syncIdebFilters();renderIdeb();});
+  $('#idebYearFilter')?.addEventListener('change',renderIdeb);
+  $('#idebSort')?.addEventListener('change',renderIdeb);
+  $('#idebSearch')?.addEventListener('input',renderIdeb);
+  document.addEventListener('change',e=>{ if(e.target.matches('[data-ideb-composition]')) updateIdebCompositionCount(); });
+
   boot();
 })();
