@@ -175,7 +175,6 @@
   }
 
 
-
   async function listPublicTransport(accessKey) {
     const client = getSupabase();
     if (!client) throw new Error('Agenda indisponível.');
