@@ -181,7 +181,9 @@ values
   ('CETI Wilson Nunes Martins Filho','Floresta do Piauí','Ensino Médio',2017,3.0,null,null,null,null,'Gráfico de evolução do relatório'),
   ('CETI Wilson Nunes Martins Filho','Floresta do Piauí','Ensino Médio',2019,3.6,null,null,null,null,'Gráfico de evolução do relatório'),
   ('CETI Wilson Nunes Martins Filho','Floresta do Piauí','Ensino Médio',2023,4.7,null,null,null,null,'Gráfico de evolução do relatório'),
-  ('CETI Wilson Nunes Martins Filho','Floresta do Piauí','Ensino Médio',2025,5.9,6.240,0.94,319.39,339.54,'Painel do relatório 2025')
+  ('CETI Wilson Nunes Martins Filho','Floresta do Piauí','Ensino Médio',2025,5.9,6.240,0.94,319.39,339.54,'Painel do relatório 2025'),
+  ('CETI Farmacêutico João Carvalho','Oeiras','Ensino Médio',2019,3.2,null,null,null,null,'Gráfico de evolução do relatório'),
+  ('CETI Farmacêutico João Carvalho','Oeiras','Ensino Médio',2025,4.8,4.840,1.00,281.75,280.08,'Painel do relatório 2025')
 on conflict (escola_nome, etapa, ano)
 do update set
   municipio=excluded.municipio,

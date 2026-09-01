@@ -190,10 +190,28 @@ Novo módulo:
 - Admin, Gerência e Coordenação podem definir a composição da GRE.
 
 Observação de base:
-- o arquivo FJC não foi incluído, pois o conteúdo recebido repete o relatório do CETI Desembargador Pedro Sá.
+- o relatório correto do FJC foi recebido posteriormente e o CETI Farmacêutico João Carvalho foi incluído na V0.8.1.
 
 Para ativar:
 1. execute `supabase/update-v080.sql`;
 2. publique os arquivos desta versão no mesmo repositório do Portal 8ª GRE;
 3. acesse Ensino e Aprendizagem → IDEB das Escolas;
 4. use “Definir escolas da GRE” para ajustar a composição de cada edição.
+
+
+## V0.8.1 — inclusão do FJC correto
+Foi incluído o **CETI Farmacêutico João Carvalho**, Ensino Médio:
+- IDEB 2025: 4,8
+- Aprendizado: 4,84
+- Fluxo: 1,00
+- Português: 281,75
+- Matemática: 280,08
+- IDEB 2019: 3,2
+
+Se a V0.8.0 já foi instalada:
+- execute somente `supabase/update-v081.sql`;
+- depois publique os arquivos desta V0.8.1.
+
+Se ainda não instalou a V0.8.0:
+- pode usar diretamente a V0.8.1;
+- execute o `supabase/update-v080.sql` desta pasta, que já contém o FJC.
