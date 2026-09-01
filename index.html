@@ -14,6 +14,87 @@
 <body>
   <div id="toast" class="toast" aria-live="polite"></div>
 
+  <section id="driverView" class="driver-view hidden">
+    <header class="driver-header">
+      <div class="driver-brand">
+        <div class="portal-logo driver-logo" aria-hidden="true">
+          <svg viewBox="0 0 96 82">
+            <path d="M8 19c14-8 28-7 40 3v49C36 61 22 59 8 66V19Z" fill="#eef8f3" stroke="#075a3a" stroke-width="2"/>
+            <path d="M88 19c-14-8-28-7-40 3v49c12-10 26-12 40-5V19Z" fill="#fff" stroke="#075a3a" stroke-width="2"/>
+            <path d="M48 22v49" stroke="#075a3a" stroke-width="3"/>
+            <circle cx="48" cy="14" r="6" fill="#f1b31c"/>
+            <circle cx="33" cy="13" r="5" fill="#1e5aa8"/>
+            <circle cx="63" cy="13" r="5" fill="#00875a"/>
+          </svg>
+        </div>
+        <div>
+          <strong>Portal 8ª GRE</strong>
+          <span>Agenda de Transporte</span>
+        </div>
+      </div>
+      <button id="driverRefreshBtn" class="driver-refresh" type="button">↻ Atualizar</button>
+    </header>
+
+    <main class="driver-main">
+      <section class="driver-hero">
+        <div>
+          <p class="eyebrow">Acesso dos Motoristas</p>
+          <h1>Calendário de Agendamentos</h1>
+          <p>Consulte os deslocamentos, horários, destinos e equipes programadas.</p>
+        </div>
+        <div id="driverUpdatedAt" class="driver-updated">Carregando agenda...</div>
+      </section>
+
+      <section id="driverAccessError" class="driver-access-error hidden">
+        <strong>Não foi possível abrir a agenda.</strong>
+        <span>Utilize o link fornecido pela 8ª GRE.</span>
+      </section>
+
+      <section id="driverCalendarArea" class="driver-calendar-card panel hidden">
+        <div class="calendar-head driver-calendar-head">
+          <div>
+            <p class="eyebrow">Agenda de Transporte</p>
+            <h2 id="driverMonthLabel">Mês</h2>
+            <p class="calendar-subtitle">Clique em uma data para visualizar os detalhes.</p>
+          </div>
+          <div class="calendar-legend">
+            <span><i class="calendar-dot calendar-s10"></i>S10</span>
+            <span><i class="calendar-dot calendar-logan"></i>Logan</span>
+            <span><i class="calendar-dot calendar-polo"></i>Polo</span>
+          </div>
+        </div>
+
+        <div class="calendar-shell">
+          <div class="calendar-toolbar">
+            <button id="driverPrevMonth" class="calendar-nav" type="button" aria-label="Mês anterior">‹</button>
+            <strong id="driverMonthToolbarLabel" class="calendar-month-label"></strong>
+            <button id="driverNextMonth" class="calendar-nav" type="button" aria-label="Próximo mês">›</button>
+          </div>
+          <div class="calendar-week"><span>DOM</span><span>SEG</span><span>TER</span><span>QUA</span><span>QUI</span><span>SEX</span><span>SÁB</span></div>
+          <div id="driverCalendar" class="transport-calendar"></div>
+        </div>
+      </section>
+
+      <section id="driverUpcoming" class="driver-upcoming panel hidden">
+        <div class="panel-header">
+          <div><p class="eyebrow">Próximos deslocamentos</p><h3>Agenda mais próxima</h3></div>
+        </div>
+        <div id="driverUpcomingList" class="driver-upcoming-list"></div>
+      </section>
+    </main>
+
+    <div id="driverModal" class="driver-modal hidden" role="dialog" aria-modal="true" aria-labelledby="driverModalTitle">
+      <div class="driver-modal-backdrop" data-close-driver-modal></div>
+      <div class="driver-modal-card">
+        <button class="modal-x" type="button" data-close-driver-modal aria-label="Fechar">×</button>
+        <p class="eyebrow">Agenda do dia</p>
+        <h2 id="driverModalTitle">Agendamentos</h2>
+        <div id="driverModalBody"></div>
+      </div>
+    </div>
+  </section>
+
+
   <section id="loginView" class="login-view">
     <div class="login-shell">
       <div class="login-brand-panel">
@@ -511,7 +592,7 @@
   </dialog>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="js/store.js?v=0.8.1"></script>
-  <script src="js/app.js?v=0.8.1"></script>
+  <script src="js/store.js?v=0.8.2"></script>
+  <script src="js/app.js?v=0.8.2"></script>
 </body>
 </html>

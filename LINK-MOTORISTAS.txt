@@ -1,6 +1,6 @@
 PORTAL 8ª GRE — ACESSO DOS MOTORISTAS
 
-https://portal8gre-one.vercel.app/?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
+https://portal8gre.vercel.app/?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
 
-Abre diretamente o calendário de transporte sem solicitar login e senha.
-O acesso é somente para consulta.
+Abre diretamente o calendário de transporte, sem login e senha.
+Acesso somente para consulta.

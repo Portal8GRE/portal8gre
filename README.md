@@ -215,3 +215,18 @@ Se a V0.8.0 já foi instalada:
 Se ainda não instalou a V0.8.0:
 - pode usar diretamente a V0.8.1;
 - execute o `supabase/update-v080.sql` desta pasta, que já contém o FJC.
+
+
+## V0.8.2 — IDEB + acesso direto dos motoristas
+A V0.8.0/V0.8.1 foi construída a partir da base estável V0.7.5 e, por isso,
+o modo direto dos motoristas não estava presente. A V0.8.2 mantém o módulo IDEB
+e reincorpora o acesso direto ao calendário.
+
+Link dos motoristas:
+https://portal8gre.vercel.app/?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
+
+Sem `?acesso=` o Portal funciona normalmente com login.
+Com a chave válida o motorista vê somente o calendário de transporte em modo consulta.
+
+Se o acesso público já havia sido criado no banco, o SQL não precisa ser repetido.
+Em caso de dúvida, `supabase/update-v082-motoristas.sql` pode ser executado novamente.
