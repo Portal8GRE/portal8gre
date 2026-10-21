@@ -1,0 +1,22 @@
+AGENDA 8ª GRE — V0.8.7 — CONEXÃO DIRETA
+
+CORREÇÃO
+A Agenda não depende mais de /api/public-config da Vercel.
+Ela se conecta diretamente ao Supabase com a Publishable Key.
+
+ARQUIVOS PARA SUBSTITUIR NA RAIZ DO GITHUB
+1. agenda8gre.html
+2. agenda8gre-manifest.json
+3. agenda8gre-sw.js
+
+NO CELULAR
+1. Aguarde a Vercel publicar.
+2. Desinstale a Agenda 8ª GRE antiga.
+3. Abra no Chrome:
+https://portal8gre.vercel.app/agenda8gre?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc&v=087
+4. Confirme que aparece "v0.8.7" no cabeçalho.
+5. Confirme que o calendário aparece.
+6. Só então instale novamente.
+
+SE A TELA MOSTRAR ERRO DO BANCO
+Execute `update-v087-agenda.sql` no Supabase SQL Editor e confirme Success.
