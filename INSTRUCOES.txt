@@ -1,0 +1,50 @@
+AGENDA 8ª GRE — APLICATIVO INSTALÁVEL NO ANDROID
+VERSÃO V0.8.3
+
+OBJETIVO
+Este pacote adiciona somente uma nova pasta chamada "agenda" ao Portal.
+Ele NÃO substitui index.html, js, css ou outros arquivos do Portal principal.
+
+LINK DE PRIMEIRO ACESSO DOS MOTORISTAS
+https://portal8gre.vercel.app/agenda/?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
+
+Depois do primeiro acesso, a autorização fica salva neste aparelho.
+O aplicativo instalado abre em:
+https://portal8gre.vercel.app/agenda/
+
+COMO PUBLICAR SEM ARRISCAR O PORTAL
+1. No GitHub, abra o repositório Portal8GRE/portal8gre.
+2. NÃO apague nem substitua arquivos existentes do Portal.
+3. Adicione somente a pasta "agenda" deste pacote na raiz do repositório.
+4. Faça o commit: "Adiciona Agenda 8ª GRE instalável para motoristas".
+5. Aguarde a Vercel publicar.
+6. Teste o link de primeiro acesso acima.
+
+BANCO
+Se o acesso dos motoristas já funciona pelo link com ?acesso=..., não precisa executar SQL.
+Se ainda não funciona, execute o arquivo:
+update-v083-agenda-pwa.sql
+no Supabase SQL Editor. Ele pode ser executado novamente com segurança.
+
+COMO INSTALAR NO ANDROID
+1. Abra o link de primeiro acesso no Google Chrome do celular.
+2. A página salva a autorização automaticamente.
+3. Toque em "Instalar aplicativo" quando aparecer.
+4. Se o botão não aparecer: menu ⋮ do Chrome > Instalar aplicativo / Adicionar à tela inicial.
+5. O ícone "Agenda 8ª GRE" ficará na tela do celular.
+
+O MOTORISTA PODE
+- visualizar o calendário;
+- consultar próximos deslocamentos;
+- abrir o dia e ver veículo, horários, destino, responsável e participantes;
+- atualizar a agenda.
+
+O MOTORISTA NÃO PODE
+- criar agendamento;
+- editar;
+- excluir;
+- cancelar;
+- acessar outras áreas do Portal.
+
+A agenda tenta atualizar automaticamente a cada 5 minutos quando estiver aberta.
+Se ficar sem internet, mostra a última agenda salva no aparelho.

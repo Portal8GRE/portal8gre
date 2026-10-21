@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08703f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Agenda 8ª GRE">
+  <meta name="description" content="Consulta dos agendamentos de transporte da 8ª GRE.">
+  <title>Agenda 8ª GRE</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="./icons/icon-192.png" alt="" width="46" height="46">
+      <div>
+        <strong>Agenda 8ª GRE</strong>
+        <span>Transporte • somente visualização</span>
+      </div>
+    </div>
+    <button id="refreshBtn" class="icon-btn" type="button" aria-label="Atualizar agenda">↻</button>
+  </header>
+
+  <main class="container">
+    <section id="installCard" class="install-card hidden">
+      <div>
+        <strong>Instale a Agenda 8ª GRE no celular</strong>
+        <span>Depois, basta tocar no ícone para consultar os agendamentos.</span>
+      </div>
+      <button id="installBtn" class="btn primary" type="button">Instalar aplicativo</button>
+    </section>
+
+    <section id="statusCard" class="status-card">
+      <div>
+        <span id="statusDot" class="status-dot loading"></span>
+        <div>
+          <strong id="statusTitle">Carregando agenda...</strong>
+          <span id="statusText">Aguarde um instante.</span>
+        </div>
+      </div>
+      <button id="helpInstallBtn" class="link-btn" type="button">Como instalar</button>
+    </section>
+
+    <section id="activationCard" class="activation-card hidden">
+      <div class="activation-icon">🔐</div>
+      <h1>Ative este celular</h1>
+      <p>Abra, neste aparelho, o link de acesso fornecido pela 8ª GRE. Depois da primeira ativação, não será necessário digitar login ou senha.</p>
+    </section>
+
+    <section id="appContent" class="hidden">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Agenda de Transporte</p>
+          <h1 id="monthTitle">Mês</h1>
+          <p>Toque em um dia para ver os detalhes dos deslocamentos.</p>
+        </div>
+        <button id="todayBtn" class="btn secondary" type="button">Hoje</button>
+      </section>
+
+      <div class="legend">
+        <span><i class="dot s10"></i>S10</span>
+        <span><i class="dot logan"></i>Logan</span>
+        <span><i class="dot polo"></i>Polo</span>
+      </div>
+
+      <section class="calendar-card">
+        <div class="calendar-toolbar">
+          <button id="prevMonthBtn" class="nav-btn" type="button" aria-label="Mês anterior">‹</button>
+          <strong id="toolbarMonth">Mês</strong>
+          <button id="nextMonthBtn" class="nav-btn" type="button" aria-label="Próximo mês">›</button>
+        </div>
+        <div class="weekdays">
+          <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+        </div>
+        <div id="calendar" class="calendar"></div>
+      </section>
+
+      <section class="upcoming-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Próximos deslocamentos</p>
+            <h2>Agenda mais próxima</h2>
+          </div>
+          <span id="lastUpdate" class="updated"></span>
+        </div>
+        <div id="upcomingList" class="upcoming-list"></div>
+      </section>
+    </section>
+  </main>
+
+  <div id="dayModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="dayModalTitle">
+    <button class="backdrop" type="button" data-close-modal aria-label="Fechar"></button>
+    <div class="modal-card">
+      <button class="close-btn" type="button" data-close-modal aria-label="Fechar">×</button>
+      <p class="eyebrow">Agenda do dia</p>
+      <h2 id="dayModalTitle">Agendamentos</h2>
+      <div id="dayModalBody"></div>
+    </div>
+  </div>
+
+  <div id="installHelpModal" class="modal hidden" role="dialog" aria-modal="true">
+    <button class="backdrop" type="button" data-close-help aria-label="Fechar"></button>
+    <div class="modal-card help-card">
+      <button class="close-btn" type="button" data-close-help aria-label="Fechar">×</button>
+      <p class="eyebrow">Instalação no Android</p>
+      <h2>Coloque a Agenda na tela do celular</h2>
+      <ol>
+        <li>Abra esta página no <strong>Google Chrome</strong>.</li>
+        <li>Toque no menu <strong>⋮</strong>, no canto superior direito.</li>
+        <li>Escolha <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+        <li>Confirme em <strong>Instalar</strong>.</li>
+      </ol>
+      <p>Depois disso, aparecerá o ícone <strong>Agenda 8ª GRE</strong> no celular.</p>
+      <button class="btn primary full" type="button" data-close-help>Entendi</button>
+    </div>
+  </div>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>

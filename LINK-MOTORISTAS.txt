@@ -1,6 +1,5 @@
-PORTAL 8ª GRE — ACESSO DOS MOTORISTAS
+PRIMEIRO ACESSO / ATIVAÇÃO:
+https://portal8gre.vercel.app/agenda/?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
 
-https://portal8gre.vercel.app/?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
-
-Abre diretamente o calendário de transporte, sem login e senha.
-Acesso somente para consulta.
+ENDEREÇO DO APLICATIVO DEPOIS DE ATIVADO:
+https://portal8gre.vercel.app/agenda/
