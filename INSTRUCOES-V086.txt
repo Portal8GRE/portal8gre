@@ -1,0 +1,37 @@
+AGENDA 8ª GRE — V0.8.6
+
+O QUE FOI CORRIGIDO
+A instalação estava funcionando, mas ao abrir o ícone o Android iniciava em
+/agenda8gre sem a chave usada no primeiro acesso. Em alguns aparelhos, a chave
+salva no navegador não estava sendo reaproveitada pelo aplicativo instalado.
+
+Nesta versão:
+- o start_url do aplicativo já contém a chave de visualização;
+- existe uma chave de fallback dentro do próprio app;
+- a chave continua autorizando SOMENTE consulta da agenda;
+- o cache do aplicativo mudou para v086, forçando atualização do PWA;
+- se o banco recusar a consulta, a tela mostra a mensagem real do erro.
+
+ARQUIVOS PARA SUBSTITUIR NA RAIZ DO GITHUB
+- agenda8gre.html
+- agenda8gre-manifest.json
+- agenda8gre-sw.js
+
+Os dois ícones podem permanecer iguais.
+
+IMPORTANTE NO CELULAR
+Como você já instalou a versão anterior:
+1. Desinstale o ícone/app "Agenda 8ª GRE" do celular.
+2. No Chrome, abra:
+https://portal8gre.vercel.app/agenda8gre?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
+3. Atualize a página uma vez.
+4. Confirme que a agenda/calendário aparece ANTES de instalar.
+5. Instale novamente pelo menu do Chrome.
+6. Abra pelo ícone "Agenda 8ª GRE".
+
+BANCO
+Se ainda aparecer erro de carregamento, execute `update-v086-agenda.sql`
+no Supabase SQL Editor e confirme "Success".
+
+LINK DE PRIMEIRO ACESSO
+https://portal8gre.vercel.app/agenda8gre?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc

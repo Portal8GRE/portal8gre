@@ -165,7 +165,7 @@ button{touch-action:manipulation}
     <section id="activationCard" class="activation-card hidden">
       <div class="activation-icon">🔐</div>
       <h1>Ative este celular</h1>
-      <p>Abra, neste aparelho, o link de acesso fornecido pela 8ª GRE. Depois da primeira ativação, não será necessário digitar login ou senha.</p>
+      <p>Abra, neste aparelho, o link de acesso fornecido pela 8ª GRE. O acesso é automático e somente para visualização. Não é necessário login ou senha.</p>
     </section>
 
     <section id="appContent" class="hidden">
@@ -240,6 +240,7 @@ button{touch-action:manipulation}
 (() => {
   const ACCESS_STORAGE = 'agenda8gre_access';
   const CACHE_STORAGE = 'agenda8gre_transport_cache_v1';
+  const BUILT_IN_ACCESS_KEY = 'f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc';
   const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   let accessKey = '';
   let bookings = [];
@@ -277,7 +278,7 @@ button{touch-action:manipulation}
       history.replaceState({},'',url.pathname + (url.search ? url.search : ''));
       return key;
     }
-    return localStorage.getItem(ACCESS_STORAGE)||'';
+    return localStorage.getItem(ACCESS_STORAGE)||BUILT_IN_ACCESS_KEY;
   }
 
   async function getPublicConfig(){
@@ -343,7 +344,8 @@ button{touch-action:manipulation}
       }else{
         $('#activationCard').classList.remove('hidden');
         $('#appContent').classList.add('hidden');
-        setStatus('error','Não foi possível abrir a agenda','Use o link fornecido pela 8ª GRE e tente novamente.');
+        const detail = String(err?.message||'Falha ao carregar os agendamentos.');
+        setStatus('error','Não foi possível carregar os agendamentos',detail);
       }
       console.error(err);
     }finally{

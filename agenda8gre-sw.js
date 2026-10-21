@@ -1,4 +1,4 @@
-const CACHE='agenda8gre-v085';
+const CACHE='agenda8gre-v086';
 const PAGE='/agenda8gre';
 const SHELL=[
   PAGE,
