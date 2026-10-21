@@ -1,0 +1,37 @@
+AGENDA 8ª GRE — V0.8.5
+
+CORREÇÃO PRINCIPAL
+O Portal usa "trailingSlash: false" na Vercel.
+A versão anterior estava em /agenda/ e usava caminhos relativos.
+A Vercel transforma /agenda/ em /agenda, e isso fazia o navegador procurar
+manifesto e service worker no lugar errado. Por isso o Android mostrava
+"Não é possível instalar o app".
+
+ESTA VERSÃO NÃO USA MAIS /agenda/.
+Ela usa uma página independente na raiz: /agenda8gre
+
+ARQUIVOS PARA SUBIR NA RAIZ DO GITHUB
+- agenda8gre.html
+- agenda8gre-manifest.json
+- agenda8gre-sw.js
+- agenda8gre-icon-192.png
+- agenda8gre-icon-512.png
+
+NÃO APAGUE OU SUBSTITUA O PORTAL PRINCIPAL.
+
+LINK DE PRIMEIRO ACESSO / ATIVAÇÃO
+https://portal8gre.vercel.app/agenda8gre?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
+
+Depois de ativado e instalado:
+https://portal8gre.vercel.app/agenda8gre
+
+PASSOS
+1. Execute update-v085-agenda.sql no Supabase e confirme Success.
+2. No GitHub Portal8GRE/portal8gre, envie os 5 arquivos acima DIRETAMENTE NA RAIZ.
+3. Aguarde a Vercel publicar.
+4. No Android, abra o LINK DE PRIMEIRO ACESSO no Chrome.
+5. Confirme que o calendário aparece.
+6. Menu ⋮ > Adicionar à tela inicial / Instalar aplicativo.
+7. Agora a opção "Instalar" deve estar habilitada.
+
+A pasta antiga /agenda pode ficar no repositório por enquanto; ela não interfere.

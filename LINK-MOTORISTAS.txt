@@ -1,5 +1,5 @@
-PRIMEIRO ACESSO / ATIVAÇÃO:
-https://portal8gre.vercel.app/agenda/?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
+PRIMEIRO ACESSO:
+https://portal8gre.vercel.app/agenda8gre?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
 
-ENDEREÇO DO APLICATIVO DEPOIS DE ATIVADO:
-https://portal8gre.vercel.app/agenda/
+DEPOIS DE ATIVADO:
+https://portal8gre.vercel.app/agenda8gre

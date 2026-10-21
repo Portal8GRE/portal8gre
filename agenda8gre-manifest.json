@@ -1,0 +1,36 @@
+{
+  "id": "/agenda8gre",
+  "name": "Agenda de Transporte 8ª GRE",
+  "short_name": "Agenda 8ª GRE",
+  "description": "Consulta dos agendamentos de transporte da 8ª Gerência Regional de Educação.",
+  "lang": "pt-BR",
+  "start_url": "/agenda8gre",
+  "scope": "/agenda8gre",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#f4f7f6",
+  "theme_color": "#08703f",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "/agenda8gre-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/agenda8gre-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
