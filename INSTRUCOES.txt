@@ -48,3 +48,13 @@ O MOTORISTA NÃO PODE
 
 A agenda tenta atualizar automaticamente a cada 5 minutos quando estiver aberta.
 Se ficar sem internet, mostra a última agenda salva no aparelho.
+
+
+CORREÇÃO V0.8.4
+Esta versão deixa a página principal da agenda AUTO-SUFICIENTE:
+- CSS embutido no próprio index.html
+- JavaScript embutido no próprio index.html
+- logomarca embutida no próprio index.html
+
+Assim, mesmo que estilos.css, app.js ou o ícone não carreguem, a tela principal continua aparecendo corretamente.
+Ainda assim, envie a pasta agenda inteira.
