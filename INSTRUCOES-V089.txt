@@ -1,0 +1,41 @@
+AGENDA 8ª GRE — V0.8.9
+
+CAUSA CORRIGIDA
+A V0.8.8 ainda usava um endereço do Supabase colocado manualmente.
+A V0.8.9 usa EXATAMENTE as variáveis já configuradas na Vercel:
+- SUPABASE_URL
+- SUPABASE_PUBLISHABLE_KEY
+
+Essas são as mesmas configurações usadas pelo Portal principal.
+
+ARQUIVOS PARA SUBSTITUIR / ADICIONAR
+
+NA RAIZ:
+- agenda8gre.html
+- agenda8gre-manifest.json
+- agenda8gre-sw.js
+
+DENTRO DA PASTA api:
+- agenda-transporte.js
+
+Não apague api/public-config.js.
+
+TESTE ANTES DE INSTALAR
+Depois da Vercel publicar, abra:
+
+https://portal8gre.vercel.app/api/agenda-transporte?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc&v=089
+
+RESULTADO ESPERADO
+Uma lista JSON começando por [ ... ]
+
+Se houver erro, a V0.8.9 mostrará a causa real:
+- configuração ausente;
+- erro retornado pelo Supabase;
+- timeout;
+- falha de rede.
+
+DEPOIS
+Abra:
+https://portal8gre.vercel.app/agenda8gre?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc&v=089
+
+Confirme v0.8.9 e o calendário. Só depois reinstale o aplicativo.
