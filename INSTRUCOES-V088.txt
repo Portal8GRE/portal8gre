@@ -1,0 +1,39 @@
+AGENDA 8ª GRE — V0.8.8
+
+CORREÇÃO PRINCIPAL
+A Agenda NÃO consulta mais o Supabase diretamente pelo navegador.
+Agora ela consulta:
+  /api/agenda-transporte
+
+Essa função roda na própria Vercel do Portal 8ª GRE e consulta o Supabase no servidor.
+Isso elimina o erro de navegador "Failed to fetch" causado na comunicação direta.
+
+ARQUIVOS PARA SUBSTITUIR/ADICIONAR NO GITHUB
+
+NA RAIZ:
+- agenda8gre.html
+- agenda8gre-manifest.json
+- agenda8gre-sw.js
+
+DENTRO DA PASTA api:
+- agenda-transporte.js
+
+IMPORTANTE
+Não apague `api/public-config.js`.
+A pasta `api` ficará com os dois arquivos.
+
+PASSOS
+1. Suba os quatro arquivos acima no repositório Portal8GRE/portal8gre.
+2. Aguarde a Vercel publicar.
+3. Abra no navegador:
+   https://portal8gre.vercel.app/agenda8gre?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc&v=088
+4. Confirme que aparece v0.8.8.
+5. Confirme que o calendário aparece.
+6. Só depois reinstale/atualize o aplicativo no celular.
+
+TESTE DA API
+Depois de publicar, este endereço deve retornar os agendamentos em JSON:
+https://portal8gre.vercel.app/api/agenda-transporte?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc
+
+Se a API retornar uma mensagem de erro, ela agora será específica e permitirá
+diagnosticar o banco sem depender do navegador.
