@@ -1,0 +1,17 @@
+AGENDA 8ª GRE — V0.9.2 — TELA LIMPA
+
+CORREÇÃO:
+- removido o cabeçalho duplicado do aplicativo após abrir a agenda;
+- removida a faixa "Visualização dos agendamentos da 8ª GRE";
+- agora a página original dos motoristas ocupa praticamente a tela toda;
+- ficam apenas dois pequenos botões flutuantes:
+  ↻ atualizar
+  ⚙ trocar link
+
+ARQUIVOS PARA SUBSTITUIR NA RAIZ DO GITHUB:
+- agenda8gre.html
+- agenda8gre-manifest.json
+- agenda8gre-sw.js
+
+TESTE:
+https://portal8gre.vercel.app/agenda8gre?v=092

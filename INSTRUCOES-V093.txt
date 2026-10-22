@@ -1,0 +1,23 @@
+AGENDA 8ª GRE — V0.9.3
+
+CORREÇÃO
+- Mantém a agenda em tela cheia, sem a barra duplicada.
+- Recoloca um pequeno botão ⚙ Link no canto inferior direito.
+- Ao tocar nele, volta imediatamente para o campo onde se cola o link.
+- Foi criado também um endereço de emergência/configuração:
+
+  https://portal8gre.vercel.app/agenda8gre?configurar=1
+
+Esse endereço apaga o link salvo naquele navegador/aplicativo e mostra novamente
+o campo "Link do agendamento".
+
+ARQUIVOS PARA SUBSTITUIR NA RAIZ DO GITHUB:
+- agenda8gre.html
+- agenda8gre-manifest.json
+- agenda8gre-sw.js
+
+Depois de publicar:
+1. Abra https://portal8gre.vercel.app/agenda8gre?configurar=1
+2. Cole o link dos motoristas.
+3. Salve.
+4. A agenda abrirá em tela cheia.
