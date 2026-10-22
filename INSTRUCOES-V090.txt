@@ -1,0 +1,22 @@
+AGENDA 8ª GRE — V0.9.0
+
+NOVO FUNCIONAMENTO
+- Na primeira abertura, aparece um campo para colar o link de acesso.
+- O usuário cola o link UMA ÚNICA VEZ.
+- O aplicativo extrai a chave e salva somente neste aparelho.
+- Nas próximas aberturas, entra direto na agenda.
+- Existe um botão "Trocar link" caso a GRE altere o acesso.
+
+ARQUIVOS PARA SUBSTITUIR
+NA RAIZ:
+- agenda8gre.html
+- agenda8gre-manifest.json
+- agenda8gre-sw.js
+
+NA PASTA api:
+- agenda-transporte.js
+
+TESTE:
+https://portal8gre.vercel.app/agenda8gre?v=090
+
+Deve aparecer "Configurar acesso à agenda" e o campo para colar o link.
