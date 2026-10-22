@@ -2,14 +2,23 @@
   "id": "/agenda8gre",
   "name": "Agenda de Transporte 8ª GRE",
   "short_name": "Agenda 8ª GRE",
-  "description": "Acesso rápido aos agendamentos dos motoristas da 8ª GRE.",
+  "description": "Consulta dos agendamentos de transporte da 8ª Gerência Regional de Educação.",
   "lang": "pt-BR",
-  "start_url": "/agenda8gre",
+  "start_url": "/agenda8gre?acesso=f3XqJHTi0ymnk781_jctjPhsnKQ_yCBS1W15-g-6KOc&v=088",
   "scope": "/agenda8gre",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "background_color": "#f4f7f6",
   "theme_color": "#08703f",
   "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "categories": [
+    "education",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/agenda8gre-icon-192.png",
