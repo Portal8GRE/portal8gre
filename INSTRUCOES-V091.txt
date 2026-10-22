@@ -1,0 +1,28 @@
+AGENDA 8ª GRE — V0.9.1 — ABRE O LINK ORIGINAL DOS MOTORISTAS
+
+ESTA VERSÃO NÃO CONSULTA SUPABASE, NÃO USA API E NÃO DEPENDE DE VARIÁVEIS DA VERCEL.
+
+FUNCIONAMENTO
+1. Na primeira abertura, cole o link completo dos motoristas.
+2. Exemplo:
+   https://portal8gre-one.vercel.app/motoristas?acesso=...
+3. Toque em "Salvar e abrir agenda".
+4. O endereço completo fica salvo no aparelho.
+5. Nas próximas vezes, o aplicativo abre diretamente esse mesmo link.
+
+ARQUIVOS PARA SUBSTITUIR NA RAIZ DO GITHUB
+- agenda8gre.html
+- agenda8gre-manifest.json
+- agenda8gre-sw.js
+- agenda8gre-icon-192.png
+- agenda8gre-icon-512.png
+
+NÃO PRECISA MAIS
+- api/agenda-transporte.js
+- SQL para este aplicativo
+- SUPABASE_URL
+- SUPABASE_PUBLISHABLE_KEY
+
+OBSERVAÇÃO
+A página original /motoristas precisa permitir abertura em iframe.
+Se o navegador bloquear iframe por política do site, a próxima alternativa é fazer o aplicativo redirecionar diretamente para o link salvo.
